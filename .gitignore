@@ -1,3 +1,6 @@
 node_modules
 dist
 *.local
+
+# Configuración del editor (Android Studio / IntelliJ)
+.idea/
