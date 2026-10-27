@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <circle cx="512" cy="512" r="440" fill="#c0392b"/>
+  <circle cx="512" cy="512" r="400" fill="none" stroke="#f3efe2" stroke-width="80" stroke-dasharray="105 104.4"/>
+  <circle cx="512" cy="512" r="290" fill="none" stroke="#f3efe2" stroke-width="10" stroke-dasharray="20 18"/>
+  <circle cx="512" cy="512" r="250" fill="#f3efe2"/>
+  <circle cx="512" cy="512" r="215" fill="#c0392b"/>
+  <text x="512" y="590" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="230" fill="#e8b84a" text-anchor="middle">T</text>
+</svg>

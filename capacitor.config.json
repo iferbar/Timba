@@ -1,0 +1,8 @@
+{
+  "appId": "com.timba.poker",
+  "appName": "Timba",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#0f3d2e"
+  }
+}
