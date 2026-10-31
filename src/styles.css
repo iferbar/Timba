@@ -79,10 +79,34 @@ button {
   pointer-events: auto;
 }
 
+/* En Inicio el título es el logotipo: grande, centrado y con un brillo dorado */
+.tab-inicio .top {
+  justify-content: center;
+  padding-top: calc(env(safe-area-inset-top) + 18px);
+}
+
+.tab-inicio .top h1 {
+  gap: 10px;
+  font-size: clamp(2.3rem, 11vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 0 0 22px rgba(232, 184, 74, 0.35);
+}
+
+.tab-inicio .top h1 svg {
+  width: 0.82em;
+  height: 0.82em;
+  filter: drop-shadow(0 0 10px rgba(232, 184, 74, 0.4));
+}
+
 .top-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.top-actions:empty {
+  display: none;
 }
 
 .mini-clock {

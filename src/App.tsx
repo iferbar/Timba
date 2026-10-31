@@ -29,7 +29,8 @@ export function App() {
           Timba
         </h1>
         <div className="top-actions">
-          {game && tab !== 'reloj' && (
+          {/* En Inicio el botón grande ya muestra el nivel y el tiempo */}
+          {game && tab !== 'reloj' && tab !== 'inicio' && (
             <button className="mini-clock" onClick={() => setTab('reloj')}>
               {game.levels[game.index].smallBlind}/{game.levels[game.index].bigBlind}
               <strong className={isRunning(game) ? '' : 'paused'}>{formatClock(remainingMs(game, now))}</strong>

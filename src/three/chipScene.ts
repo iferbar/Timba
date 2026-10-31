@@ -240,13 +240,15 @@ function setChipStyle(chip: SceneChip): FaceStyle {
   return { base: chip.color, insert: detail, ring: detail, emblem: chip.value, gold: false }
 }
 
-/** Ficha vista lejos y desenfocada, para el fondo */
-function blurredChipTexture(chip: SceneChip): THREE.CanvasTexture {
-  const [src, srcCtx] = newCanvas(192)
-  drawFace(srcCtx, 192, setChipStyle(chip), 'color')
+/** Ficha desenfocada (lejos, o muy cerca de la cámara con más desenfoque) */
+function blurredChipTexture(chip: SceneChip, blur: number): THREE.CanvasTexture {
+  // Cuanto más desenfoque, más margen para que no se corte en el borde del lienzo
+  const chipSize = blur > 12 ? 150 : 192
+  const [src, srcCtx] = newCanvas(chipSize)
+  drawFace(srcCtx, chipSize, setChipStyle(chip), 'color')
   const [c, ctx] = newCanvas(256)
-  ctx.filter = 'blur(9px)'
-  ctx.drawImage(src, 32, 32)
+  ctx.filter = `blur(${blur}px)`
+  ctx.drawImage(src, (256 - chipSize) / 2, (256 - chipSize) / 2)
   return canvasTexture(c)
 }
 
@@ -297,6 +299,7 @@ interface FarChip {
   base: THREE.Vector3
   size: number
   phase: number
+  /** Velocidad del giro de moneda; 0 = siempre redonda */
   flip: number
 }
 
@@ -305,10 +308,17 @@ export interface ChipSceneHandle {
 }
 
 /**
- * Escena de la pantalla de inicio: la ficha de Timba flotando sobre una peana
+ * Escena de la pantalla de inicio: la ficha de Timba flotando sobre un montón
  * en el tapete, con aros dorados, luces desenfocadas y fichas del set alrededor.
+ * `topInset` da los px de arriba que tapa el título: la ficha protagonista nunca
+ * sube por encima (en pantallas bajas la cámara se aleja un poco).
  */
-export function createChipScene(host: HTMLElement, chips: SceneChip[], reducedMotion: boolean): ChipSceneHandle {
+export function createChipScene(
+  host: HTMLElement,
+  chips: SceneChip[],
+  reducedMotion: boolean,
+  topInset: () => number = () => 0,
+): ChipSceneHandle {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -584,36 +594,46 @@ export function createChipScene(host: HTMLElement, chips: SceneChip[], reducedMo
    */
   const nearGeo = chipGeometry(1, 0.2, 0.05, 48)
   const nearSpots: [number, number, number, number][] = [
-    [-0.78, 0.42, 0.5, 0.3],
-    [0.8, 0.08, 1.0, 0.32],
-    [-0.8, -0.12, 1.6, 0.26],
+    [-0.8, 0.24, 0.6, 0.28],
+    [0.8, 0.0, 1.0, 0.32],
+    [-0.78, -0.28, 1.6, 0.24],
   ]
   const nearChips: NearChip[] = nearSpots.map(([, , z, s], i) => {
     const mesh = new THREE.Mesh(nearGeo, materialsFor(palette[(i + 1) % palette.length]))
     mesh.scale.setScalar(s)
-    mesh.rotation.set(0.6 + i, 0.4 * i, 0.9 - i * 0.3)
+    // Balanceo en vez de vueltas completas (ver render): nunca se ponen de canto
+    mesh.rotation.order = 'XZY'
     const base = new THREE.Vector3(0, 0, z)
     scene.add(mesh)
     return { mesh, base, phase: i * 2.1, spin: new THREE.Vector2(0.45 + i * 0.1, 0.3 + i * 0.12) }
   })
 
-  // Fichas lejanas: desenfocadas y girando, para dar profundidad. Ninguna arriba
-  // a la izquierda (logotipo) ni arriba a la derecha (ajustes)
-  const farTextures = palette.map(blurredChipTexture)
-  const farSpots: [number, number, number][] = [
-    [-0.82, 0.2, -3.5],
-    [0.62, 0.6, -4.5],
-    [0.86, -0.22, -3.8],
-    [0.28, 0.84, -5.5],
+  /*
+   * Fichas desenfocadas, para dar profundidad: una grande muy cerca de la cámara
+   * (arriba a la derecha) y varias pequeñas al fondo. Ninguna en el centro de
+   * arriba, donde va el título.
+   * [x, y en pantalla, profundidad, tamaño, desenfoque, ficha del set]
+   */
+  const farSpots: [number, number, number, number, number, number][] = [
+    [0.88, 0.6, 3.2, 1.3, 16, 1],
+    [-0.72, 0.72, -5.5, 0.8, 9, 3],
+    [0.36, 0.42, -4.6, 0.7, 9, 2],
+    [-0.5, 0.36, -5.2, 0.7, 9, 0],
   ]
-  const farChips: FarChip[] = farSpots.map(([, , z], i) => {
+  const farChips: FarChip[] = farSpots.map(([, , z, size, blur, chip], i) => {
     const sprite = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: farTextures[i % farTextures.length], transparent: true, depthWrite: false }),
+      new THREE.SpriteMaterial({
+        map: blurredChipTexture(palette[chip % palette.length], blur),
+        transparent: true,
+        depthWrite: false,
+        // La de delante, algo translúcida: no debe tapar nada importante
+        opacity: blur > 12 ? 0.8 : 1,
+      }),
     )
-    const size = 0.9 + (i % 3) * 0.25
     const base = new THREE.Vector3(0, 0, z)
     scene.add(sprite)
-    return { sprite, base, size, phase: i * 1.3, flip: 0.5 + (i % 4) * 0.2 }
+    // La de delante no gira como una moneda: tan desenfocada, al estrecharse parece una mancha
+    return { sprite, base, size, phase: i * 1.3, flip: blur > 12 ? 0 : 0.5 + (i % 4) * 0.2 }
   })
 
   const ray = new THREE.Vector3()
@@ -685,6 +705,7 @@ export function createChipScene(host: HTMLElement, chips: SceneChip[], reducedMo
   const tableFront = new THREE.Vector3(0, TABLE_Y, 2.39)
   const projected = new THREE.Vector3()
   const FRAME_BOTTOM = 36
+  const heroTop = new THREE.Vector3(0, HERO_Y + 1.05, 0)
 
   const resize = () => {
     const { clientWidth: w, clientHeight: h } = host
@@ -694,9 +715,6 @@ export function createChipScene(host: HTMLElement, chips: SceneChip[], reducedMo
     // Se aleja la cámara lo justo para que el aro de latón quepa a lo ancho (con un
     // pequeño margen) y, en pantallas bajas, para que quepa la escena a lo alto
     const tanHalf = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
-    cameraBase.z = Math.max(2.5 / (tanHalf * camera.aspect), 8.2)
-    fog.near = cameraBase.z + 1
-    fog.far = cameraBase.z + 8
     camera.updateProjectionMatrix()
 
     // Sube cámara y objetivo a la vez (la escena baja sin cambiar la perspectiva)
@@ -711,14 +729,24 @@ export function createChipScene(host: HTMLElement, chips: SceneChip[], reducedMo
       camera.updateMatrixWorld()
     }
     const target = -1 + (2 * FRAME_BOTTOM) / h
-    const halfH = (cameraBase.z - tableFront.z) * tanHalf
-    let shift = 0.5
-    for (let k = 0; k < 4; k++) {
+    // Borde de arriba de la ficha (con su balanceo) bajo el título, con un respiro
+    const ceiling = 1 - (2 * (topInset() + 10)) / h
+    let distance = Math.max(2.5 / (tanHalf * camera.aspect), 8.2)
+    for (let attempt = 0; attempt < 12; attempt++) {
+      cameraBase.z = distance
+      const halfH = (cameraBase.z - tableFront.z) * tanHalf
+      let shift = 0.5
+      for (let k = 0; k < 4; k++) {
+        aim(shift)
+        // Nunca por debajo de 0: la escena subiría hacia el título
+        shift = THREE.MathUtils.clamp(shift + (projected.copy(tableFront).project(camera).y - target) * halfH, 0, 1.4)
+      }
       aim(shift)
-      // Nunca por debajo de 0: la escena subiría y chocaría con el logotipo
-      shift = THREE.MathUtils.clamp(shift + (projected.copy(tableFront).project(camera).y - target) * halfH, 0, 1.4)
+      if (projected.copy(heroTop).project(camera).y <= ceiling) break
+      distance *= 1.05
     }
-    aim(shift)
+    fog.near = cameraBase.z + 1
+    fog.far = cameraBase.z + 8
     nearChips.forEach((c, i) => placeOnScreen(c.base, nearSpots[i][0], nearSpots[i][1], nearSpots[i][3] + 0.08))
     // La textura deja margen alrededor de la ficha: el radio real es ~0,38 del tamaño
     farChips.forEach((f, i) => placeOnScreen(f.base, farSpots[i][0], farSpots[i][1], f.size * 0.38))
@@ -746,8 +774,10 @@ export function createChipScene(host: HTMLElement, chips: SceneChip[], reducedMo
     for (const m of sparkMats) m.opacity = 0.65 + Math.sin(t * 3) * 0.25
 
     for (const c of nearChips) {
-      c.mesh.rotation.x = c.phase + t * c.spin.x
-      c.mesh.rotation.z = c.phase * 0.5 + t * c.spin.y
+      // Se balancean con la cara hacia la cámara y giran sobre su propio eje
+      c.mesh.rotation.x = 1.35 + Math.sin(t * c.spin.x + c.phase) * 0.5
+      c.mesh.rotation.z = (c.phase - 2) * 0.2 + Math.sin(t * c.spin.y + c.phase) * 0.35
+      c.mesh.rotation.y = c.phase + t * 0.5
       c.mesh.position.set(
         c.base.x + Math.sin(t * 0.4 + c.phase) * 0.08,
         c.base.y + Math.sin(t * 0.7 + c.phase) * 0.14,
@@ -757,7 +787,7 @@ export function createChipScene(host: HTMLElement, chips: SceneChip[], reducedMo
     for (const f of farChips) {
       // Girar una moneda vista de frente: se estrecha y vuelve a abrirse (sin llegar
       // a ponerse de canto, que de lejos y desenfocada parece una mancha)
-      const open = 0.5 + 0.5 * Math.abs(Math.cos(t * f.flip + f.phase))
+      const open = f.flip ? 0.5 + 0.5 * Math.abs(Math.cos(t * f.flip + f.phase)) : 1
       f.sprite.scale.set(f.size, f.size * open, 1)
       f.sprite.material.rotation = f.phase + t * 0.15
       f.sprite.position.set(f.base.x, f.base.y + Math.sin(t * 0.3 + f.phase) * 0.2, f.base.z)

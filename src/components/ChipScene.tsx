@@ -20,7 +20,12 @@ export default function ChipScene({ chips }: Props) {
     void document.fonts.load('700 40px "Fredoka Variable"').finally(() => {
       if (cancelled) return
       try {
-        handle = createChipScene(host, chips, reduced)
+        // Lo que tapa el título de la cabecera, que flota encima de la escena
+        const topInset = () => {
+          const title = document.querySelector('.top h1')
+          return title ? title.getBoundingClientRect().bottom - host.getBoundingClientRect().top : 0
+        }
+        handle = createChipScene(host, chips, reduced, topInset)
       } catch {
         // Sin WebGL: queda el fondo de la cabecera
       }
