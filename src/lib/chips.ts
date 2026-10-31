@@ -15,6 +15,13 @@ export interface ChipSet {
 
 export type StackMode = 'corto' | 'normal' | 'largo' | 'custom'
 
+export const MIN_PLAYERS = 2
+export const MAX_PLAYERS = 20
+
+export function clampPlayers(players: number): number {
+  return Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, players))
+}
+
 /** Stack objetivo en ciegas grandes para cada modo predefinido */
 export const STACK_BB: Record<Exclude<StackMode, 'custom'>, number> = {
   corto: 30,

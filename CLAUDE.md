@@ -62,8 +62,15 @@ Los sets son editables en la app (cada uno trae uno distinto y los valores puede
 - `src/lib/timer.ts`: lógica pura del cronómetro, basada en marcas de reloj (`endsAt`) para sobrevivir a pantalla bloqueada y recargas. Tests en `timer.test.ts`
 - `src/lib/useGameClock.ts`: reloj de la partida a nivel de App (avanza niveles y avisa aunque se esté en otra pestaña)
 - `src/lib/alerts.ts`: sonidos (Web Audio), vibración y Wake Lock
-- `src/lib/storage.ts`: configuración y partida en curso guardadas en localStorage
-- `src/components/`: pantallas (calculadora de fichas, editor de sets, estructura de ciegas, reloj)
+- `src/lib/storage.ts`: configuración y partida en curso guardadas en localStorage. Una sola copia en memoria por clave (`useSyncExternalStore`): un cambio en una pantalla (p. ej. jugadores en Inicio) se ve al momento en las demás
+- `src/components/`: pantallas (inicio, calculadora de fichas, editor de sets, estructura de ciegas, reloj) e `Icons.tsx` (iconos SVG propios: no usar emojis ni glifos Unicode como iconos)
+- `src/three/chipScene.ts`: escena 3D de Inicio con Three.js (ficha negra y dorada con pica, pila y fichas voladoras con los colores del set elegido). Se carga con `React.lazy` desde `ChipScene.tsx` para que Three.js solo se descargue en Inicio; se para con la app oculta y queda fija con "reducir movimiento"
+
+## Diseño
+
+- Skill de diseño del proyecto: `impeccable` (`.claude/skills/impeccable`), instalada sin sus hooks. Pantallas de app = modo Operate.
+- Fuente de display: Fredoka (`@fontsource-variable/fredoka`, empaquetada para funcionar offline) para logotipo, botón principal y números grandes del reloj. Texto normal: fuente del sistema.
+- Tema oscuro (tapete verde y dorado), pensado para jugar de noche en la mesa.
 
 Nota: Wake Lock y vibración solo funcionan en contexto seguro (https o localhost) y la vibración no existe en iOS. Abriendo la app por IP de la wifi (http) la pantalla puede apagarse; en el APK de Capacitor funcionan.
 

@@ -8,10 +8,23 @@
   --gold: #e8b84a;
   --danger: #ff8a7a;
   --radius: 14px;
+  --display: 'Fredoka Variable', system-ui, sans-serif;
   color-scheme: dark;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
+  caret-color: var(--gold);
+  scrollbar-color: var(--card-border) transparent;
   -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: var(--gold);
+  color: #2a1f05;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
 }
 
 * {
@@ -35,6 +48,7 @@ button {
 }
 
 .app {
+  position: relative;
   max-width: 520px;
   margin: 0 auto;
   min-height: 100dvh;
@@ -43,14 +57,32 @@ button {
 }
 
 .top {
-  padding: calc(env(safe-area-inset-top) + 14px) 16px 4px;
-}
-
-.top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 14px) 16px 4px;
+}
+
+/* En Inicio la cabecera flota sobre la escena 3D */
+.tab-inicio .top {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  padding-bottom: 28px;
+  /* Velo suave para que el logotipo se lea encima de la escena */
+  background: linear-gradient(to bottom, rgba(6, 26, 19, 0.7), rgba(6, 26, 19, 0));
+  pointer-events: none;
+}
+
+.tab-inicio .top > * {
+  pointer-events: auto;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .mini-clock {
@@ -73,10 +105,277 @@ button {
 }
 
 .top h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
-  font-size: 1.6rem;
-  letter-spacing: 0.04em;
+  font-family: var(--display);
+  font-size: 1.75rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   color: var(--gold);
+}
+
+.top h1 svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* Inicio */
+
+/* Inicio ocupa la pantalla entera: la escena crece y se come el espacio sobrante */
+.home {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 80px - env(safe-area-inset-bottom));
+}
+
+.hero {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 270px;
+  max-height: 620px;
+  background: radial-gradient(ellipse 60% 55% at 50% 48%, rgba(232, 184, 74, 0.16), transparent 70%);
+}
+
+.hero-scene {
+  position: absolute;
+  inset: 0;
+  touch-action: pan-y;
+}
+
+.hero-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.home-body {
+  margin-top: -36px;
+  position: relative;
+  z-index: 1;
+}
+
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 68px;
+  padding: 10px 28px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f6cf62, #d9a233);
+  color: #2a1f05;
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 650;
+  box-shadow:
+    0 10px 24px -8px rgba(232, 184, 74, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: transform 0.15s ease-out;
+}
+
+.cta:active {
+  transform: scale(0.97);
+}
+
+.cta svg {
+  width: 26px;
+  height: 26px;
+  flex: none;
+}
+
+.cta span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.cta small {
+  font-family: system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+.card.setup {
+  padding: 12px;
+}
+
+/* Set y jugadores en la misma fila: lo que más se toca, arriba */
+.setup-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setup-set {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 4px 8px 4px 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--felt-dark);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.setup-set-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.setup-set svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+.stepper.compact {
+  flex: none;
+  gap: 2px;
+}
+
+.stepper.compact > svg,
+.setup-blinds > svg:first-child {
+  width: 20px;
+  height: 20px;
+  color: var(--gold);
+}
+
+.stepper.compact > svg {
+  margin-right: 4px;
+}
+
+.stepper.compact button {
+  width: 44px;
+  height: 44px;
+}
+
+.stepper.compact .stepper-value {
+  min-width: 1.6em;
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.setup-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Reparto por jugador: cada ficha con cuántas recibe */
+.setup-deal {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--felt-dark);
+  text-align: left;
+}
+
+.deal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.deal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 6px;
+}
+
+.deal-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deal-count {
+  display: flex;
+  flex-direction: column;
+}
+
+.deal-count strong {
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pequeño pero legible con poca luz en la mesa */
+.deal-count small {
+  color: #c6d8ce;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.deal-stack {
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.deal-stack strong {
+  color: var(--gold);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.deal-warning {
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+/* Ciegas: una línea que lleva a su pestaña */
+.setup-blinds {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 2px;
+  padding: 4px 2px 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  text-align: left;
+}
+
+.setup-blinds span {
+  flex: 1;
+}
+
+.setup-blinds strong {
+  color: var(--text);
+}
+
+.setup-blinds > svg:last-child {
+  width: 20px;
+  height: 20px;
 }
 
 main {
@@ -223,6 +522,8 @@ main {
 }
 
 .stepper button {
+  display: grid;
+  place-items: center;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -230,6 +531,10 @@ main {
   background: var(--felt-dark);
   font-size: 1.8rem;
   line-height: 1;
+}
+
+.stepper button:disabled {
+  opacity: 0.35;
 }
 
 .stepper-value {
@@ -451,14 +756,16 @@ input {
 }
 
 .timer-blinds {
+  font-family: var(--display);
   font-size: clamp(2.6rem, 14vw, 4rem);
-  font-weight: 800;
+  font-weight: 650;
   line-height: 1.1;
 }
 
 .timer-clock {
-  font-size: clamp(4.5rem, 26vw, 7.5rem);
-  font-weight: 800;
+  font-family: var(--display);
+  font-size: clamp(4.5rem, 26vw, 6rem);
+  font-weight: 650;
   line-height: 1;
   color: var(--gold);
 }
@@ -504,12 +811,18 @@ input {
 }
 
 .ctrl {
+  display: grid;
+  place-items: center;
   width: 60px;
   height: 60px;
   border-radius: 50%;
   border: 1px solid var(--card-border);
   background: var(--felt-dark);
-  font-size: 1.3rem;
+}
+
+.ctrl svg {
+  width: 22px;
+  height: 22px;
 }
 
 .ctrl.main {
@@ -518,7 +831,11 @@ input {
   border: none;
   background: var(--gold);
   color: #2a1f05;
-  font-size: 2rem;
+}
+
+.ctrl.main svg {
+  width: 34px;
+  height: 34px;
 }
 
 .ctrl:disabled {
@@ -555,22 +872,24 @@ input {
 
 .tabs button {
   flex: 1;
-  max-width: 173px;
+  max-width: 130px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 10px 0;
+  gap: 3px;
+  padding: 10px 0 8px;
   background: none;
   border: none;
   color: var(--muted);
   font-size: 0.8rem;
 }
 
-.tabs button.active {
-  color: var(--gold);
+.tabs button svg {
+  width: 24px;
+  height: 24px;
 }
 
-.tab-icon {
-  font-size: 1.3rem;
+.tabs button.active {
+  color: var(--gold);
+  font-weight: 700;
 }

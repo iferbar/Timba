@@ -3,6 +3,7 @@ import { elapsedMs, formatClock, isRunning, remainingMs } from '../lib/timer'
 import type { GameClock } from '../lib/useGameClock'
 import { formatHours, NoPlan } from './BlindStructure'
 import { Chip } from './Chip'
+import { NextIcon, PauseIcon, PlayIcon, PrevIcon } from './Icons'
 
 interface Props {
   clock: GameClock
@@ -74,13 +75,13 @@ export function Timer({ clock, onGoToChips }: Props) {
 
       <div className="controls">
         <button className="ctrl" onClick={clock.prev} disabled={game.index === 0} aria-label="Nivel anterior">
-          ⏮
+          <PrevIcon />
         </button>
         <button className="ctrl main" onClick={clock.toggle} disabled={finished} aria-label={running ? 'Pausa' : 'Reanudar'}>
-          {running ? '❚❚' : '▶'}
+          {running ? <PauseIcon /> : <PlayIcon />}
         </button>
         <button className="ctrl" onClick={clock.next} disabled={!next} aria-label="Nivel siguiente">
-          ⏭
+          <NextIcon />
         </button>
       </div>
 

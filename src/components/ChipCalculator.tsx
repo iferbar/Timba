@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { distribute, STACK_BB, targetStackFor, type Distribution, type StackMode } from '../lib/chips'
+import { clampPlayers, distribute, STACK_BB, targetStackFor, type Distribution, type StackMode } from '../lib/chips'
 import { useChipConfig } from '../lib/storage'
 import { Chip } from './Chip'
+import { MinusIcon, PlusIcon } from './Icons'
 import { SetEditor } from './SetEditor'
 
 const MODES: { mode: StackMode; label: string }[] = [
@@ -10,9 +11,6 @@ const MODES: { mode: StackMode; label: string }[] = [
   { mode: 'largo', label: `Largo · ${STACK_BB.largo} BB` },
   { mode: 'custom', label: 'Otro' },
 ]
-
-const MIN_PLAYERS = 2
-const MAX_PLAYERS = 20
 
 export function ChipCalculator() {
   const [config, setConfig] = useChipConfig()
@@ -38,8 +36,7 @@ export function ChipCalculator() {
 
   const target = targetStackFor(set, config.stackMode, config.customStack)
   const result = distribute(set, config.players, target)
-  const setPlayers = (players: number) =>
-    setConfig((c) => ({ ...c, players: Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, players)) }))
+  const setPlayers = (players: number) => setConfig((c) => ({ ...c, players: clampPlayers(players) }))
 
   return (
     <div className="screen">
@@ -78,11 +75,11 @@ export function ChipCalculator() {
         <h2>Jugadores</h2>
         <div className="stepper">
           <button onClick={() => setPlayers(config.players - 1)} aria-label="Menos jugadores">
-            −
+            <MinusIcon />
           </button>
           <span className="stepper-value">{config.players}</span>
           <button onClick={() => setPlayers(config.players + 1)} aria-label="Más jugadores">
-            +
+            <PlusIcon />
           </button>
         </div>
       </section>

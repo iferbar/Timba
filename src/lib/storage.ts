@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useSyncExternalStore, type SetStateAction } from 'react'
 import type { ChipSet, StackMode } from './chips'
 import { DEFAULT_SETS } from './defaults'
 import type { Game } from './timer'
@@ -39,16 +39,41 @@ function load<T extends object>(key: string, fallback: T): T {
   return fallback
 }
 
+// Una sola copia de cada clave para toda la app: si Inicio cambia los jugadores,
+// el plan de partida y la calculadora lo ven al momento
+const cache = new Map<string, unknown>()
+const listeners = new Map<string, Set<() => void>>()
+
 /** Estado guardado en el móvil para la próxima partida */
 function usePersistentState<T extends object>(key: string, fallback: T) {
-  const [value, setValue] = useState<T>(() => load(key, fallback))
-  useEffect(() => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value))
-    } catch {
-      // Ignorado: la app sigue funcionando sin guardar
-    }
-  }, [key, value])
+  if (!cache.has(key)) cache.set(key, load(key, fallback))
+
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      const set = listeners.get(key) ?? new Set()
+      listeners.set(key, set)
+      set.add(onChange)
+      return () => set.delete(onChange)
+    },
+    [key],
+  )
+  const value = useSyncExternalStore(subscribe, () => cache.get(key) as T)
+
+  const setValue = useCallback(
+    (next: SetStateAction<T>) => {
+      const prev = cache.get(key) as T
+      const value = typeof next === 'function' ? (next as (prev: T) => T)(prev) : next
+      if (value === prev) return
+      cache.set(key, value)
+      try {
+        localStorage.setItem(key, JSON.stringify(value))
+      } catch {
+        // Ignorado: la app sigue funcionando sin guardar
+      }
+      listeners.get(key)?.forEach((notify) => notify())
+    },
+    [key],
+  )
   return [value, setValue] as const
 }
 
