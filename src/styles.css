@@ -1567,3 +1567,34 @@ input {
 .sheet .link:disabled {
   opacity: 0.4;
 }
+
+/* Editar un valor a mano (stack, duración, nivel) con un Listo para cerrar */
+.value-edit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.value-edit input {
+  flex: 1;
+  min-width: 0;
+}
+
+.value-edit .pill {
+  flex: none;
+  min-height: 48px;
+  padding-inline: 18px;
+}
+
+.card-head.spaced {
+  margin-top: 16px;
+}
+
+.value-edit .stepper {
+  gap: 8px;
+}
+
+.value-edit .stepper-value {
+  min-width: 3.6em;
+}

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { formatMinutes, type BlindLevel } from '../lib/blinds'
 import type { ChipColor } from '../lib/chips'
 import { formatNumber } from '../lib/format'
@@ -6,7 +7,7 @@ import { useBlindConfig } from '../lib/storage'
 import { formatClock, isRunning, remainingMs } from '../lib/timer'
 import type { GameClock } from '../lib/useGameClock'
 import { Chip } from './Chip'
-import { ChevronIcon, UsersIcon } from './Icons'
+import { ChevronIcon, MinusIcon, PencilIcon, PlusIcon, UsersIcon } from './Icons'
 
 const DURATIONS = [120, 150, 180, 240]
 const LEVEL_LENGTHS = [15, 20, 30]
@@ -72,30 +73,27 @@ export function BlindStructure({ clock, onGoToChips }: Props) {
       </section>
 
       <section className="card">
-        <h2>Duración de la partida</h2>
-        <div className="pills even">
-          {DURATIONS.map((d) => (
-            <button
-              key={d}
-              className={`pill ${config.durationMinutes === d ? 'active' : ''}`}
-              onClick={() => setConfig((c) => ({ ...c, durationMinutes: d }))}
-            >
-              {formatHours(d)}
-            </button>
-          ))}
-        </div>
-        <h2 className="spaced">Cada nivel</h2>
-        <div className="pills even">
-          {LEVEL_LENGTHS.map((m) => (
-            <button
-              key={m}
-              className={`pill ${config.levelMinutes === m ? 'active' : ''}`}
-              onClick={() => setConfig((c) => ({ ...c, levelMinutes: m }))}
-            >
-              {m} min
-            </button>
-          ))}
-        </div>
+        <PresetPicker
+          title="Duración de la partida"
+          value={config.durationMinutes}
+          presets={DURATIONS}
+          step={15}
+          min={60}
+          max={360}
+          format={formatHours}
+          onChange={(durationMinutes) => setConfig((c) => ({ ...c, durationMinutes }))}
+        />
+        <PresetPicker
+          title="Cada nivel"
+          spaced
+          value={config.levelMinutes}
+          presets={LEVEL_LENGTHS}
+          step={1}
+          min={5}
+          max={60}
+          format={(m) => `${m} min`}
+          onChange={(levelMinutes) => setConfig((c) => ({ ...c, levelMinutes }))}
+        />
         {game && <p className="muted">La partida en curso sigue con sus niveles: esto cambia la próxima.</p>}
       </section>
 
@@ -145,6 +143,79 @@ export function BlindStructure({ clock, onGoToChips }: Props) {
         <p className="muted">Si la partida se alarga, siguen los niveles de prórroga.</p>
       </section>
     </div>
+  )
+}
+
+/**
+ * Atajos en cápsulas y un lápiz para afinar con − / +. Los cambios se aplican
+ * al momento (la tabla se ve cambiar); Listo solo cierra. Un valor que no es
+ * atajo sale como cápsula propia para saber qué está puesto.
+ */
+function PresetPicker({
+  title,
+  spaced = false,
+  value,
+  presets,
+  step,
+  min,
+  max,
+  format,
+  onChange,
+}: {
+  title: string
+  spaced?: boolean
+  value: number
+  presets: number[]
+  step: number
+  min: number
+  max: number
+  format: (value: number) => string
+  onChange: (value: number) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const set = (v: number) => onChange(Math.min(max, Math.max(min, v)))
+  return (
+    <>
+      <div className={`card-head ${spaced ? 'spaced' : ''}`}>
+        <h2>{title}</h2>
+        {!editing && (
+          <button className="icon-btn" onClick={() => setEditing(true)} aria-label={`Ajustar: ${title}`}>
+            <PencilIcon />
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <div className="value-edit">
+          <div className="stepper compact" role="group" aria-label={title}>
+            <button onClick={() => set(value - step)} disabled={value <= min} aria-label="Menos">
+              <MinusIcon />
+            </button>
+            <span className="stepper-value" aria-live="polite">
+              {format(value)}
+            </span>
+            <button onClick={() => set(value + step)} disabled={value >= max} aria-label="Más">
+              <PlusIcon />
+            </button>
+          </div>
+          <button className="pill active" onClick={() => setEditing(false)}>
+            Listo
+          </button>
+        </div>
+      ) : (
+        <div className="pills even">
+          {presets.map((p) => (
+            <button key={p} className={`pill ${value === p ? 'active' : ''}`} onClick={() => onChange(p)}>
+              {format(p)}
+            </button>
+          ))}
+          {!presets.includes(value) && (
+            <button className="pill active" onClick={() => setEditing(true)}>
+              {format(value)}
+            </button>
+          )}
+        </div>
+      )}
+    </>
   )
 }
 

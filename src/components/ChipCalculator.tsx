@@ -29,6 +29,8 @@ const MODES: { mode: Exclude<StackMode, 'custom'>; label: string }[] = [
 export function ChipCalculator() {
   const [config, setConfig] = useChipConfig()
   const [editing, setEditing] = useState(false)
+  // Stack escrito a mano mientras se edita; null = no se está editando
+  const [stackDraft, setStackDraft] = useState<string | null>(null)
 
   const set = config.sets.find((s) => s.id === config.selectedSetId) ?? config.sets[0]
 
@@ -62,9 +64,13 @@ export function ChipCalculator() {
   const maxStack = Math.max(...modeStacks.map((s) => s ?? 0))
   const maxBigBlinds =
     result.ok && maxed.some(Boolean) ? Math.floor(maxStack / result.distribution.bigBlind) : null
-  // El lápiz pasa a "Otro" partiendo del stack que sale ahora
-  const editStack = () =>
-    setConfig((c) => ({ ...c, stackMode: 'custom', customStack: result.ok ? result.distribution.stack : target }))
+  // El lápiz abre el campo con el stack que sale ahora; Listo, Enter o tocar fuera lo guardan
+  const editStack = () => setStackDraft(String(result.ok ? result.distribution.stack : target))
+  const commitStack = () => {
+    const value = Math.floor(Number(stackDraft))
+    if (value > 0) setConfig((c) => ({ ...c, stackMode: 'custom', customStack: value }))
+    setStackDraft(null)
+  }
 
   return (
     <div className="screen">
@@ -128,24 +134,36 @@ export function ChipCalculator() {
       <section className="card">
         <div className="card-head">
           <h2>Stack inicial</h2>
-          {config.stackMode !== 'custom' && (
+          {stackDraft === null && (
             <button className="icon-btn" onClick={editStack} aria-label="Escribir el stack">
               <PencilIcon />
             </button>
           )}
         </div>
-        {config.stackMode === 'custom' ? (
-          <label className="stack-input">
+        {stackDraft !== null ? (
+          <form
+            className="value-edit stack-input"
+            onSubmit={(e) => {
+              e.preventDefault()
+              commitStack()
+            }}
+          >
             <input
               type="number"
               inputMode="numeric"
+              enterKeyHint="done"
               min={1}
               autoFocus
-              value={config.customStack || ''}
-              onChange={(e) => setConfig((c) => ({ ...c, customStack: Number(e.target.value) }))}
+              value={stackDraft}
+              onChange={(e) => setStackDraft(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              onBlur={commitStack}
               aria-label="Stack objetivo"
             />
-          </label>
+            <button type="submit" className="pill active">
+              Listo
+            </button>
+          </form>
         ) : (
           result.ok && <strong className="stack-big">{formatNumber(result.distribution.stack)}</strong>
         )}
@@ -153,6 +171,12 @@ export function ChipCalculator() {
           <p className="muted">
             {result.distribution.bigBlinds} ciegas grandes · empieza {result.distribution.bigBlind / 2}/
             {result.distribution.bigBlind}
+            {/* El set no siempre llega exacto al número escrito: se dice */}
+            {stackDraft === null &&
+              config.stackMode === 'custom' &&
+              result.distribution.stack !== config.customStack && (
+                <> · pediste {formatNumber(config.customStack)}, es lo más cercano con este set</>
+              )}
           </p>
         )}
         <div className="pills even">
