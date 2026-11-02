@@ -1155,6 +1155,11 @@ input {
 .hand-roles {
   flex: 1;
   min-width: 0;
+  min-height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -2148,7 +2153,7 @@ input {
 /* Borde de madera con el canto por debajo y sombra en el suelo: da el volumen */
 .table-rail {
   position: absolute;
-  inset: 18% 13%;
+  inset: 20% 15%;
   padding: 3.2%;
   border-radius: 50%;
   background: linear-gradient(180deg, #8a5a2b 0%, #5c3a1a 55%, #3e2610 100%);
@@ -2253,6 +2258,21 @@ input {
     left 0.45s ease-in-out,
     top 0.45s ease-in-out;
   animation: seat-in 0.3s ease-out;
+}
+
+/* Ciegas: fichas doradas (la grande, más intensa) */
+.table-puck.blind {
+  width: 28px;
+  background: #f1d48a;
+  color: #2a1f05;
+  font-size: 0.6rem;
+  box-shadow:
+    0 3px 0 #a8862f,
+    0 5px 8px rgba(0, 0, 0, 0.45);
+}
+
+.table-puck.blind.big {
+  background: var(--gold);
 }
 
 .table-puck.small {

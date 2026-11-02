@@ -161,6 +161,22 @@ export const FileIcon = () => (
   </Icon>
 )
 
+/** Devolver el botón a la mano anterior: flecha de deshacer, distinta de "nivel anterior" */
+export const UndoIcon = () => (
+  <Icon>
+    <path d="M9 14 4 9l5-5" />
+    <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+  </Icon>
+)
+
+/** Pasar el botón: flecha de rehacer, distinta de "nivel siguiente" */
+export const PassIcon = () => (
+  <Icon>
+    <path d="m15 14 5-5-5-5" />
+    <path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
+  </Icon>
+)
+
 export const CheckIcon = () => (
   <Icon strokeWidth="3">
     <path d="m5 12.5 4.5 4.5L19 7.5" />

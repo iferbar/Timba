@@ -21,6 +21,8 @@ import {
   PrevIcon,
   RestartIcon,
   StopIcon,
+  PassIcon,
+  UndoIcon,
 } from './Icons'
 
 interface Props {
@@ -39,7 +41,8 @@ export function Timer({ clock, onGoToChips }: Props) {
   const plan = useGamePlan()
   const { game, now } = clock
   const [counting, setCounting] = useState(false)
-  const [knocking, setKnocking] = useState(false)
+  // La mesa: 'knockout' para apuntar quién cae, 'view' solo para mirarla
+  const [table, setTable] = useState<'knockout' | 'view' | null>(null)
 
   if (!game) {
     if (!plan) return <NoPlan onGoToChips={onGoToChips} />
@@ -121,10 +124,12 @@ export function Timer({ clock, onGoToChips }: Props) {
       >
         {roles && game.names && !winner && (
           <div className="blinds-hand">
-            <span className="hand-roles">
+            <button className="hand-roles" onClick={() => setTable('view')} aria-label="Ver la mesa">
               <span className="table-puck small" aria-label="Botón">
                 D
               </span>
+              {/* Mano a mano el que reparte pone también la pequeña */}
+              {roles.small === roles.button && <small>SB</small>}
               {game.names[roles.button]}
               {roles.small !== roles.button && (
                 <>
@@ -134,13 +139,13 @@ export function Timer({ clock, onGoToChips }: Props) {
               )}
               <small>BB</small>
               {game.names[roles.big]}
-            </span>
+            </button>
             <button className="hand-btn back" onClick={clock.prevHand} aria-label="Devolver el botón a la mano anterior">
-              <PrevIcon />
+              <UndoIcon />
             </button>
             <button className="hand-btn" onClick={clock.nextHand} aria-label="Pasar el botón a la mano siguiente">
               Pasar
-              <NextIcon />
+              <PassIcon />
             </button>
           </div>
         )}
@@ -183,7 +188,7 @@ export function Timer({ clock, onGoToChips }: Props) {
             game.players && left ? (
               <span className="mini-stepper">
                 <button
-                  onClick={() => (named ? setKnocking(true) : clock.setPlayersLeft(left - 1))}
+                  onClick={() => (named ? setTable('knockout') : clock.setPlayersLeft(left - 1))}
                   disabled={left <= 1}
                   aria-label={named ? 'Apuntar quién cae' : 'Apuntar una eliminación'}
                 >
@@ -235,8 +240,9 @@ export function Timer({ clock, onGoToChips }: Props) {
         </div>
       )}
 
-      {knocking && (
+      {table && (
         <KnockoutSheet
+          viewOnly={table === 'view'}
           alive={alive}
           prize={prizeList[alive.length - 1] ?? 0}
           seats={buttonSeat !== undefined ? game.names : undefined}
@@ -244,7 +250,7 @@ export function Timer({ clock, onGoToChips }: Props) {
           buttonSeat={buttonSeat}
           chipColors={chipColors}
           onPick={clock.eliminate}
-          onClose={() => setKnocking(false)}
+          onClose={() => setTable(null)}
         />
       )}
 

@@ -22,6 +22,12 @@ interface Props {
 /** Por encima de esto los nombres no caben alrededor de la mesa: van en lista */
 export const MAX_AROUND = 10
 
+/** Radios (en % de la mesa): montones junto al borde y, por delante, las fichas de botón y ciegas */
+const STACK_RX = 29
+const STACK_RY = 22
+const PUCK_RX = 21
+const PUCK_RY = 14.5
+
 /**
  * Punto alrededor del centro: el asiento 1 abajo y el resto en el sentido del
  * reloj. shift corre el punto hacia el asiento siguiente (fracción del hueco).
@@ -70,7 +76,7 @@ export function SeatTable({ seats, buttonSeat, out = [], revealed = seats.length
           (name, i) =>
             i < revealed &&
             !out.includes(name) && (
-              <span key={name} className="seat-stack" style={around(i, n, 25, 19)} aria-hidden="true">
+              <span key={name} className="seat-stack" style={around(i, n, STACK_RX, STACK_RY)} aria-hidden="true">
                 {stack.map((color, k) => (
                   <i key={k} style={{ background: color, bottom: k * 4 }} />
                 ))}
@@ -78,16 +84,36 @@ export function SeatTable({ seats, buttonSeat, out = [], revealed = seats.length
             ),
         )}
 
-      {/* Un solo botón que se desliza de asiento en asiento */}
+      {/* Botón y ciegas: una ficha de cada delante del jugador, que se desliza al pasar la mano */}
       {roles && (
-        // Al lado del montón del que reparte, sin tapar el centro
-        <span
-          className="table-puck"
-          style={around(roles.button, n, 25, 19, 0.32)}
-          aria-label={`Botón: ${seats[roles.button]}`}
-        >
-          D
-        </span>
+        <>
+          <span
+            className="table-puck"
+            style={around(roles.button, n, PUCK_RX, PUCK_RY)}
+            aria-label={`Botón: ${seats[roles.button]}`}
+          >
+            D
+          </span>
+          {/* Mano a mano el botón pone la pequeña: su ficha va al lado de la D (unos 25°) para no taparse */}
+          <span
+            className="table-puck blind"
+            style={
+              roles.small === roles.button
+                ? around(roles.small, n, PUCK_RX, PUCK_RY, -n * 0.07)
+                : around(roles.small, n, PUCK_RX, PUCK_RY)
+            }
+            aria-label={`Ciega pequeña: ${seats[roles.small]}`}
+          >
+            SB
+          </span>
+          <span
+            className="table-puck blind big"
+            style={around(roles.big, n, PUCK_RX, PUCK_RY)}
+            aria-label={`Ciega grande: ${seats[roles.big]}`}
+          >
+            BB
+          </span>
+        </>
       )}
 
       <ol>
@@ -98,7 +124,7 @@ export function SeatTable({ seats, buttonSeat, out = [], revealed = seats.length
             <li
               key={name}
               className={`seat ${shown ? '' : 'hidden'} ${isOut ? 'out' : ''}`}
-              style={around(i, n, 41, 42)}
+              style={around(i, n, 43, 43)}
             >
               {onPick && !isOut ? (
                 <button className="seat-name" onClick={() => onPick(name)}>
@@ -107,7 +133,6 @@ export function SeatTable({ seats, buttonSeat, out = [], revealed = seats.length
               ) : (
                 <span className="seat-name">{shown ? name : i + 1}</span>
               )}
-              {shown && blind(i) && <small>{blind(i)}</small>}
             </li>
           )
         })}

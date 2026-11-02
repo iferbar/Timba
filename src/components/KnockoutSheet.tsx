@@ -12,6 +12,8 @@ interface Props {
   out?: string[]
   buttonSeat?: number
   chipColors?: string[]
+  /** Abierta desde la fila del botón: solo para mirar, sin apuntar a nadie */
+  viewOnly?: boolean
   onPick: (name: string) => void
   onClose: () => void
 }
@@ -21,7 +23,17 @@ interface Props {
  * asientos sorteados es la mesa, así que sirve también para mirar quién se
  * sienta dónde (tocando fuera se cierra sin apuntar nada).
  */
-export function KnockoutSheet({ alive, prize, seats, out = [], buttonSeat, chipColors, onPick, onClose }: Props) {
+export function KnockoutSheet({
+  alive,
+  prize,
+  seats,
+  out = [],
+  buttonSeat,
+  chipColors,
+  viewOnly = false,
+  onPick,
+  onClose,
+}: Props) {
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -46,7 +58,7 @@ export function KnockoutSheet({ alive, prize, seats, out = [], buttonSeat, chipC
     >
       <div className="sheet-body">
         <div className="sheet-head">
-          <h2 id="knockout-title">¿Quién cae?</h2>
+          <h2 id="knockout-title">{viewOnly ? 'Mesa' : '¿Quién cae?'}</h2>
           <button className="icon-btn" onClick={() => ref.current?.close()} aria-label="Cerrar">
             <CloseIcon />
           </button>
@@ -58,15 +70,28 @@ export function KnockoutSheet({ alive, prize, seats, out = [], buttonSeat, chipC
               out={out}
               buttonSeat={buttonSeat}
               chipColors={chipColors}
-              onPick={pick}
+              onPick={viewOnly ? undefined : pick}
               center={
-                <>
-                  <strong>{place}º puesto</strong>
-                  <span>{reward}</span>
-                </>
+                viewOnly ? (
+                  <>
+                    <strong>
+                      {alive.length} de {seats.length}
+                    </strong>
+                    <span>en juego</span>
+                  </>
+                ) : (
+                  <>
+                    <strong>{place}º puesto</strong>
+                    <span>{reward}</span>
+                  </>
+                )
               }
             />
-            <p className="muted center">Toca su nombre. Para solo mirar la mesa, toca fuera.</p>
+            <p className="muted center">
+              {viewOnly
+                ? 'Para apuntar quién cae, usa el − de «Quedan».'
+                : 'Toca su nombre. Para solo mirar la mesa, toca fuera.'}
+            </p>
           </>
         ) : (
           <>
