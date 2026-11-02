@@ -56,6 +56,20 @@ describe('blindStructure', () => {
     expect(whites!.smallBlind).toBeGreaterThanOrEqual(20)
   })
 
+  it('junta los color-ups que caerían en niveles seguidos', () => {
+    // Con 2 h salían las de 10 en el nivel 6 y las de 25 en el 7
+    const levels = blindStructure({ ...base, durationMinutes: 120 })
+    expect(levels.find((l) => l.colorUp.includes(25))?.colorUp).toEqual([10, 25])
+    for (const durationMinutes of [120, 150, 180, 240]) {
+      for (const levelMinutes of [15, 20, 30]) {
+        const at = blindStructure({ ...base, durationMinutes, levelMinutes })
+          .map((l, i) => (l.colorUp.length ? i : -1))
+          .filter((i) => i >= 0)
+        for (let k = 1; k < at.length; k++) expect(at[k] - at[k - 1]).toBeGreaterThanOrEqual(2)
+      }
+    }
+  })
+
   it('funciona con un set cuya ficha más pequeña es 25', () => {
     const levels = blindStructure({ ...base, chipValues: [25, 100, 500], startingStack: 5000 })
     expect(levels[0].bigBlind).toBe(50)

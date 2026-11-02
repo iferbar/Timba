@@ -45,7 +45,7 @@ export function App() {
         ) : tab === 'fichas' ? (
           <ChipCalculator />
         ) : tab === 'ciegas' ? (
-          <BlindStructure onGoToChips={goToChips} />
+          <BlindStructure clock={clock} onGoToChips={goToChips} />
         ) : (
           <Timer clock={clock} onGoToChips={goToChips} />
         )}

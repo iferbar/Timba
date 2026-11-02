@@ -16,6 +16,9 @@ export interface Game {
   endsAt: number | null
   /** Tiempo que queda del nivel cuando está en pausa */
   remaining: number
+  /** Jugadores y stack con los que empezó (opcionales: partidas guardadas antes no los tienen) */
+  players?: number
+  stack?: number
 }
 
 export function newGame(levels: BlindLevel[], chips: ChipColor[], levelMinutes: number): Game {

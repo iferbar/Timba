@@ -26,6 +26,8 @@ export interface BlindLevel {
 const END_BB_DIVISOR = 12
 /** Niveles extra por si la partida se alarga */
 const OVERTIME_LEVELS = 4
+/** Niveles mínimos entre dos color-ups, para no parar la mesa cada dos por tres */
+const MIN_COLOR_UP_GAP = 2
 const NICE_MANTISSAS = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8]
 
 /** Ciegas grandes "bonitas" cuya ciega pequeña se paga con la ficha más baja */
@@ -103,6 +105,19 @@ export function blindStructure(input: BlindInput): BlindLevel[] {
     if (from <= 0) break
     levels[from].colorUp.push(chip)
     remaining = without
+  }
+
+  // Si dos color-ups caen casi seguidos se juntan en el segundo: retrasar uno
+  // siempre se puede (las ciegas siguen pagándose con las fichas que quedan)
+  let next = -1
+  for (let i = levels.length - 1; i >= 0; i--) {
+    if (levels[i].colorUp.length === 0) continue
+    if (next !== -1 && next - i < MIN_COLOR_UP_GAP) {
+      levels[next].colorUp.unshift(...levels[i].colorUp)
+      levels[i].colorUp = []
+    } else {
+      next = i
+    }
   }
 
   return levels

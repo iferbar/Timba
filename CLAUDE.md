@@ -12,6 +12,7 @@ App personal para organizar partidas de poker (torneo) entre amigos. Todo se usa
 
 - Jugadores: normalmente 5–9. Si somos más, 2 mesas (mismas ciegas y mismo cronómetro).
 - Buy-in: 5 €. Sin recompras (freezeout).
+- Premios: cobra la mitad de los jugadores (redondeando hacia abajo). El último premiado recupera lo apostado (reintegro) y el resto se reparte escalonado en múltiplos de 5 €, con más para el 1º: 6 → 15·10·5, 7 → 20·10·5, 8 → 20·10·5·5.
 - Duración objetivo: 2–3 horas.
 - Niveles de 20 minutos.
 - El stack inicial varía cada partida: la app debe **guardar la configuración de la última partida** (y un historial) para no tener que recordarla.
@@ -57,7 +58,9 @@ Los sets son editables en la app (cada uno trae uno distinto y los valores puede
 ## Estructura
 
 - `src/lib/chips.ts`: algoritmo de reparto de fichas (lógica pura, con tests en `chips.test.ts`)
-- `src/lib/blinds.ts`: estructura de ciegas (curva exponencial como Pokersoup: al llegar a la duración objetivo, ciega grande ≈ fichas totales / 12; valores redondeados a cantidades pagables y avisos de color-up). Tests en `blinds.test.ts`
+- `src/lib/blinds.ts`: estructura de ciegas (curva exponencial como Pokersoup: al llegar a la duración objetivo, ciega grande ≈ fichas totales / 12; valores redondeados a cantidades pagables y avisos de color-up, juntando los que caerían en niveles seguidos). Tests en `blinds.test.ts`
+- `src/lib/prizes.ts`: reparto del bote (`prizes(jugadores)`). Tests en `prizes.test.ts`. Se ve en el Reloj
+- `src/lib/format.ts`: `formatNumber` (punto de miles siempre, "4.500"); usarlo en vez de `toLocaleString`
 - `src/lib/plan.ts`: `useGamePlan()`, la partida configurada (fichas + ciegas) que usan Ciegas y Reloj
 - `src/lib/timer.ts`: lógica pura del cronómetro, basada en marcas de reloj (`endsAt`) para sobrevivir a pantalla bloqueada y recargas. Tests en `timer.test.ts`
 - `src/lib/useGameClock.ts`: reloj de la partida a nivel de App (avanza niveles y avisa aunque se esté en otra pestaña)

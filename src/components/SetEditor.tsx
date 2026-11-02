@@ -1,4 +1,5 @@
 import type { ChipColor, ChipSet } from '../lib/chips'
+import { formatNumber } from '../lib/format'
 import { newId } from '../lib/storage'
 import { Chip } from './Chip'
 
@@ -62,7 +63,7 @@ export function SetEditor({ sets, onChange, onClose }: Props) {
           {set.chips.map((chip) => (
             <div key={chip.id} className="chip-grid">
               <label className="color-pick" aria-label="Elegir color">
-                <Chip color={chip.color} size={30} />
+                <Chip color={chip.color} size={30} value={chip.value || undefined} />
                 <input type="color" value={chip.color} onChange={(e) => updateChip(set, chip.id, { color: e.target.value })} />
               </label>
               <input value={chip.name} onChange={(e) => updateChip(set, chip.id, { name: e.target.value })} />
@@ -101,7 +102,7 @@ export function SetEditor({ sets, onChange, onClose }: Props) {
           </button>
           <p className="muted">
             {set.chips.reduce((n, c) => n + c.quantity, 0)} fichas · valor total{' '}
-            {set.chips.reduce((n, c) => n + c.quantity * c.value, 0).toLocaleString('es-ES')}
+            {formatNumber(set.chips.reduce((n, c) => n + c.quantity * c.value, 0))}
           </p>
         </section>
       ))}

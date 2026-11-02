@@ -106,3 +106,10 @@ export const SpadeIcon = () => (
     <path d="M12 2c1.6 2.6 9 7 9 11.6A4.4 4.4 0 0 1 13.4 16l1.4 5H9.2l1.4-5A4.4 4.4 0 0 1 3 13.6C3 9 10.4 4.6 12 2Z" />
   </svg>
 )
+
+export const PencilIcon = () => (
+  <Icon>
+    <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" />
+    <path d="m13.5 6.5 4 4" />
+  </Icon>
+)

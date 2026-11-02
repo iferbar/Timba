@@ -1,15 +1,26 @@
 import { useState } from 'react'
-import { clampPlayers, distribute, STACK_BB, targetStackFor, type Distribution, type StackMode } from '../lib/chips'
+import {
+  clampPlayers,
+  distribute,
+  MAX_PLAYERS,
+  MIN_PLAYERS,
+  sortedChips,
+  STACK_BB,
+  targetStackFor,
+  type Distribution,
+  type StackMode,
+} from '../lib/chips'
+import { formatNumber } from '../lib/format'
 import { useChipConfig } from '../lib/storage'
 import { Chip } from './Chip'
-import { MinusIcon, PlusIcon } from './Icons'
+import { ChevronIcon, MinusIcon, PencilIcon, PlusIcon, UsersIcon } from './Icons'
 import { SetEditor } from './SetEditor'
 
-const MODES: { mode: StackMode; label: string }[] = [
-  { mode: 'corto', label: `Corto · ${STACK_BB.corto} BB` },
-  { mode: 'normal', label: `Normal · ${STACK_BB.normal} BB` },
-  { mode: 'largo', label: `Largo · ${STACK_BB.largo} BB` },
-  { mode: 'custom', label: 'Otro' },
+// Para un stack a mano está el lápiz
+const MODES: { mode: Exclude<StackMode, 'custom'>; label: string }[] = [
+  { mode: 'corto', label: `Corto · ${STACK_BB.corto}` },
+  { mode: 'normal', label: `Normal · ${STACK_BB.normal}` },
+  { mode: 'largo', label: `Largo · ${STACK_BB.largo}` },
 ]
 
 export function ChipCalculator() {
@@ -34,59 +45,104 @@ export function ChipCalculator() {
     )
   }
 
+  const chips = sortedChips(set)
   const target = targetStackFor(set, config.stackMode, config.customStack)
   const result = distribute(set, config.players, target)
   const setPlayers = (players: number) => setConfig((c) => ({ ...c, players: clampPlayers(players) }))
+  // El lápiz pasa a "Otro" partiendo del stack que sale ahora
+  const editStack = () =>
+    setConfig((c) => ({ ...c, stackMode: 'custom', customStack: result.ok ? result.distribution.stack : target }))
 
   return (
     <div className="screen">
       <section className="card">
-        <div className="card-head">
-          <h2>Set de fichas</h2>
+        <div className="set-select">
+          <Chip color={chips[0]?.color ?? '#fff'} size={28} />
+          <select
+            value={set.id}
+            onChange={(e) => setConfig((c) => ({ ...c, selectedSetId: e.target.value }))}
+            aria-label="Set de fichas"
+          >
+            {config.sets.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <ChevronIcon />
           <button className="link" onClick={() => setEditing(true)}>
             Editar sets
           </button>
         </div>
-        <div className="pills">
-          {config.sets.map((s) => (
-            <button
-              key={s.id}
-              className={`pill ${s.id === set.id ? 'active' : ''}`}
-              onClick={() => setConfig((c) => ({ ...c, selectedSetId: s.id }))}
-            >
-              {s.name}
-            </button>
+        <div className="set-summary">
+          {chips.map((c) => (
+            <span key={c.id} className="set-chip">
+              <Chip color={c.color} size={34} value={c.value} />
+              <small>×{c.quantity}</small>
+            </span>
           ))}
         </div>
-        <div className="set-summary">
-          {set.chips
-            .slice()
-            .sort((a, b) => a.value - b.value)
-            .map((c) => (
-              <span key={c.id} className="set-chip">
-                <Chip color={c.color} size={20} />
-                {c.value} <small>×{c.quantity}</small>
-              </span>
-            ))}
-        </div>
+        <p className="muted">
+          {chips.reduce((n, c) => n + c.quantity, 0)} fichas · valor total{' '}
+          {formatNumber(chips.reduce((n, c) => n + c.quantity * c.value, 0))}
+        </p>
       </section>
 
-      <section className="card">
-        <h2>Jugadores</h2>
-        <div className="stepper">
-          <button onClick={() => setPlayers(config.players - 1)} aria-label="Menos jugadores">
+      <section className="card players-row">
+        <UsersIcon />
+        <span>Jugadores</span>
+        <div className="stepper compact">
+          <button
+            onClick={() => setPlayers(config.players - 1)}
+            disabled={config.players <= MIN_PLAYERS}
+            aria-label="Menos jugadores"
+          >
             <MinusIcon />
           </button>
-          <span className="stepper-value">{config.players}</span>
-          <button onClick={() => setPlayers(config.players + 1)} aria-label="Más jugadores">
+          <span className="stepper-value" aria-live="polite">
+            {config.players}
+          </span>
+          <button
+            onClick={() => setPlayers(config.players + 1)}
+            disabled={config.players >= MAX_PLAYERS}
+            aria-label="Más jugadores"
+          >
             <PlusIcon />
           </button>
         </div>
       </section>
 
       <section className="card">
-        <h2>Stack inicial</h2>
-        <div className="pills">
+        <div className="card-head">
+          <h2>Stack inicial</h2>
+          {config.stackMode !== 'custom' && (
+            <button className="icon-btn" onClick={editStack} aria-label="Escribir el stack">
+              <PencilIcon />
+            </button>
+          )}
+        </div>
+        {config.stackMode === 'custom' ? (
+          <label className="stack-input">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              autoFocus
+              value={config.customStack || ''}
+              onChange={(e) => setConfig((c) => ({ ...c, customStack: Number(e.target.value) }))}
+              aria-label="Stack objetivo"
+            />
+          </label>
+        ) : (
+          result.ok && <strong className="stack-big">{formatNumber(result.distribution.stack)}</strong>
+        )}
+        {result.ok && (
+          <p className="muted">
+            {result.distribution.bigBlinds} ciegas grandes · empieza {result.distribution.bigBlind / 2}/
+            {result.distribution.bigBlind}
+          </p>
+        )}
+        <div className="pills even">
           {MODES.map(({ mode, label }) => (
             <button
               key={mode}
@@ -97,18 +153,7 @@ export function ChipCalculator() {
             </button>
           ))}
         </div>
-        {config.stackMode === 'custom' && (
-          <label className="field">
-            Stack objetivo
-            <input
-              type="number"
-              inputMode="numeric"
-              min={1}
-              value={config.customStack || ''}
-              onChange={(e) => setConfig((c) => ({ ...c, customStack: Number(e.target.value) }))}
-            />
-          </label>
-        )}
+        <p className="muted">En ciegas grandes. Recomendado 30–50 para 2–3 h.</p>
       </section>
 
       {result.ok ? (
@@ -123,45 +168,41 @@ export function ChipCalculator() {
 function Result({ distribution: d, players }: { distribution: Distribution; players: number }) {
   const off = Math.abs(d.stack - d.target) / d.target
   return (
-    <section className="card result">
-      <h2>Cada jugador recibe</h2>
-      <ul className="rows">
-        {d.perPlayer
-          .filter((p) => p.count > 0)
-          .map((p) => (
-            <li key={p.chip.id}>
-              <Chip color={p.chip.color} />
-              <span className="row-name">
-                {p.chip.name} <small>de {p.chip.value}</small>
-              </span>
-              <span className="row-count">×{p.count}</span>
-              <span className="row-value">{p.count * p.chip.value}</span>
-            </li>
-          ))}
-      </ul>
-      <div className="total">
-        <span>Stack</span>
-        <strong>{d.stack.toLocaleString('es-ES')}</strong>
-      </div>
-      <p className="muted">
-        {d.chipsPerPlayer} fichas por jugador · {d.bigBlinds} ciegas grandes (ciegas iniciales {d.bigBlind / 2}/
-        {d.bigBlind})
-      </p>
-      {off > 0.1 && (
-        <p className="note">
-          Con {players} jugadores este set no llega a {d.target.toLocaleString('es-ES')} con un reparto escalonado. Para
-          más stack, juntad otro set.
-        </p>
-      )}
+    <>
+      <section className="card">
+        <h2>Cada jugador recibe</h2>
+        <ul className="deal-grid">
+          {d.perPlayer
+            .filter((p) => p.count > 0)
+            .map((p) => (
+              <li key={p.chip.id}>
+                <Chip color={p.chip.color} size={44} value={p.chip.value} />
+                <strong>×{p.count}</strong>
+                <small>{formatNumber(p.count * p.chip.value)}</small>
+              </li>
+            ))}
+        </ul>
+        {/* El stack ya está en grande arriba */}
+        <p className="muted center">{d.chipsPerPlayer} fichas por jugador</p>
+        {off > 0.1 && (
+          <p className="note">
+            Con {players} jugadores este set no llega a {formatNumber(d.target)} con un reparto escalonado. Para
+            más stack, juntad otro set.
+          </p>
+        )}
+      </section>
 
-      <h3>Banca (cambio y color-up)</h3>
-      <div className="set-summary">
-        {d.bank.map((b) => (
-          <span key={b.chip.id} className="set-chip">
-            <Chip color={b.chip.color} size={20} />×{b.count}
-          </span>
-        ))}
-      </div>
-    </section>
+      <section className="card">
+        <h2>Banca</h2>
+        <div className="set-summary">
+          {d.bank.map((b) => (
+            <span key={b.chip.id} className="set-chip">
+              <Chip color={b.chip.color} size={34} value={b.chip.value} />×{b.count}
+            </span>
+          ))}
+        </div>
+        <p className="muted">Para dar cambio y para el color-up.</p>
+      </section>
+    </>
   )
 }

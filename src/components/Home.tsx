@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { clampPlayers, distribute, MAX_PLAYERS, MIN_PLAYERS, sortedChips, targetStackFor } from '../lib/chips'
+import { formatNumber } from '../lib/format'
 import { useGamePlan } from '../lib/plan'
 import { useBlindConfig, useChipConfig } from '../lib/storage'
 import { formatClock, isRunning, remainingMs } from '../lib/timer'
@@ -98,7 +99,7 @@ export function Home({ clock, onNavigate }: Props) {
               <span className="setup-label">Cada jugador recibe</span>
               {distribution && (
                 <span className="deal-stack">
-                  Stack <strong>{distribution.stack.toLocaleString('es-ES')}</strong> · {distribution.bigBlinds} BB
+                  Stack <strong>{formatNumber(distribution.stack)}</strong> · {distribution.bigBlinds} BB
                 </span>
               )}
             </span>
@@ -108,7 +109,7 @@ export function Home({ clock, onNavigate }: Props) {
                   .filter((p) => p.count > 0)
                   .map((p) => (
                     <span key={p.chip.id} className="deal-chip">
-                      <Chip color={p.chip.color} size={28} />
+                      <Chip color={p.chip.color} size={28} value={p.chip.value} />
                       <span className="deal-count">
                         <strong>×{p.count}</strong>
                         <small>de {p.chip.value}</small>

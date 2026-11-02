@@ -54,7 +54,8 @@ export function useGameClock() {
       unlockAudio()
       const t = Date.now()
       setNow(t)
-      setStore({ game: play(newGame(plan.levels, plan.chips, plan.levelMinutes), t) })
+      const game = { ...newGame(plan.levels, plan.chips, plan.levelMinutes), players: plan.players, stack: plan.stack }
+      setStore({ game: play(game, t) })
     },
     toggle() {
       unlockAudio()
