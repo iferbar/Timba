@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { unlockAudio, useWakeLock } from './alerts'
 import { knockout, levelSpeech, playersEvent, playersSpeech, showBanner, warningSpeech } from './announcer'
 import type { GamePlan } from './plan'
-import { prizes } from './prizes'
 import { announce } from './sounds'
 import { useAlertConfig, useGameStore } from './storage'
 import {
   alivePlayers,
   eliminate,
+  gameBuyIn,
+  gamePrizes,
   goTo,
   isRunning,
   moveButton,
@@ -97,6 +98,8 @@ export function useGameClock() {
         ...newGame(plan.levels, plan.chips, plan.levelMinutes),
         players: plan.players,
         stack: plan.stack,
+        buyIn: plan.buyIn,
+        prizes: plan.prizes,
         names: plan.names,
         dealer: plan.dealer,
         buttonSeat: plan.names && plan.dealer ? plan.names.indexOf(plan.dealer) : undefined,
@@ -114,7 +117,7 @@ export function useGameClock() {
     setPlayersLeft: (left: number) => {
       if (game?.players) {
         const prev = playersLeft(game) ?? game.players
-        const list = prizes(game.players)
+        const list = gamePrizes(game)
         const event = playersEvent(prev, Math.max(1, left), list.length)
         if (event) {
           unlockAudio()
@@ -136,7 +139,7 @@ export function useGameClock() {
       const alive = before.filter((n) => n !== name)
       if (alive.length === 0 || alive.length === before.length) return
       unlockAudio()
-      const { event, speech, banner } = knockout(name, before.length, alive, prizes(game.players))
+      const { event, speech, banner } = knockout(name, before.length, alive, gamePrizes(game), gameBuyIn(game))
       announce(event, speech, alerts)
       showBanner(banner)
       update((g, t) => {

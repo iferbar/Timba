@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BUY_IN, prizes } from './prizes'
+import { BUY_IN, DEFAULT_PRIZE_CONFIG, prizePlan, prizes, type PrizeConfig } from './prizes'
 
 describe('prizes', () => {
   it('reparte como en nuestras partidas', () => {
@@ -29,5 +29,42 @@ describe('prizes', () => {
         else expect(p[i]).toBeGreaterThanOrEqual(p[i + 1])
       }
     }
+  })
+})
+
+describe('prizes con otros premiados', () => {
+  it('reparte entre los que se digan, con reintegro al último', () => {
+    expect(prizes(7, BUY_IN, 2)).toEqual([30, 5])
+    expect(prizes(7, BUY_IN, 1)).toEqual([35])
+    expect(prizes(6, 10)).toEqual([30, 20, 10])
+    for (let paid = 1; paid <= 9; paid++) {
+      const p = prizes(9, BUY_IN, paid)
+      expect(p).toHaveLength(paid)
+      expect(p.reduce((a, b) => a + b, 0)).toBe(45)
+      expect(p.every((a) => a > 0)).toBe(true)
+    }
+  })
+})
+
+describe('prizePlan', () => {
+  const config = (byPlayers: PrizeConfig['byPlayers'], buyIn = BUY_IN): PrizeConfig => ({ buyIn, byPlayers })
+
+  it('sin cambiar nada, el reparto de siempre', () => {
+    expect(prizePlan(7, DEFAULT_PRIZE_CONFIG)).toEqual([20, 10, 5])
+    expect(prizePlan(6, config({}, 10))).toEqual([30, 20, 10])
+  })
+
+  it('usa lo cambiado para ese número de jugadores', () => {
+    const c = config({ 7: { paid: 3, amounts: [15, 15, 5] }, 8: { paid: 2 } })
+    expect(prizePlan(7, c)).toEqual([15, 15, 5])
+    expect(prizePlan(8, c)).toEqual([35, 5])
+    expect(prizePlan(6, c)).toEqual([15, 10, 5])
+  })
+
+  it('si lo cambiado no cuadra con el bote, vuelve al escalonado', () => {
+    expect(prizePlan(7, config({ 7: { amounts: [20, 10, 10] } }))).toEqual([20, 10, 5])
+    expect(prizePlan(7, config({ 7: { paid: 2, amounts: [20, 10, 5] } }))).toEqual([30, 5])
+    // Con otro buy-in el bote cambia y lo guardado ya no vale
+    expect(prizePlan(7, config({ 7: { amounts: [15, 15, 5] } }, 10))).toEqual([40, 20, 10])
   })
 })

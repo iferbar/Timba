@@ -64,6 +64,7 @@ export function knockout(
   place: number,
   alive: string[],
   prizeList: number[],
+  buyIn = BUY_IN,
 ): { event: AlertEvent; speech: string; banner: Banner } {
   const prize = prizeList[place - 1] ?? 0
   const event = playersEvent(place, place - 1, prizeList.length) ?? 'out'
@@ -71,7 +72,7 @@ export function knockout(
   const speech = [
     `Adiós, ${name}.`,
     prize > 0
-      ? `${capitalize(where)}, ${prize === BUY_IN ? 'recupera sus' : 'se lleva'} ${prize} euros.`
+      ? `${capitalize(where)}, ${prize === buyIn ? 'recupera sus' : 'se lleva'} ${prize} euros.`
       : `Queda en ${where}.`,
   ]
   const detail = `${place}º puesto${prize > 0 ? ` · ${prize} €` : ''}`

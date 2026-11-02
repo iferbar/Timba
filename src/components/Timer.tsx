@@ -2,13 +2,24 @@ import { useState, type ReactNode } from 'react'
 import type { BlindLevel } from '../lib/blinds'
 import { formatNumber } from '../lib/format'
 import { useGamePlan } from '../lib/plan'
-import { BUY_IN, prizes } from '../lib/prizes'
 import { handRoles } from '../lib/seats'
-import { alivePlayers, buttonSeatOf, elapsedMs, finishers, formatClock, isRunning, playersLeft, remainingMs } from '../lib/timer'
+import {
+  alivePlayers,
+  buttonSeatOf,
+  elapsedMs,
+  finishers,
+  formatClock,
+  gameBuyIn,
+  gamePrizes,
+  isRunning,
+  playersLeft,
+  remainingMs,
+} from '../lib/timer'
 import type { GameClock } from '../lib/useGameClock'
 import { formatHours, NoPlan } from './BlindStructure'
 import { Chip } from './Chip'
 import { KnockoutSheet } from './KnockoutSheet'
+import { PrizeSheet } from './PrizeSheet'
 import { SeatsCard } from './SeatsCard'
 import { StackCounter } from './StackCounter'
 import {
@@ -22,6 +33,7 @@ import {
   RestartIcon,
   StopIcon,
   PassIcon,
+  PencilIcon,
   UndoIcon,
 } from './Icons'
 
@@ -43,6 +55,7 @@ export function Timer({ clock, onGoToChips }: Props) {
   const [counting, setCounting] = useState(false)
   // La mesa: 'knockout' para apuntar quién cae, 'view' solo para mirarla
   const [table, setTable] = useState<'knockout' | 'view' | null>(null)
+  const [editingPrizes, setEditingPrizes] = useState(false)
 
   if (!game) {
     if (!plan) return <NoPlan onGoToChips={onGoToChips} />
@@ -65,11 +78,12 @@ export function Timer({ clock, onGoToChips }: Props) {
           items={[
             [plan.players, 'Jugadores'],
             [formatNumber(plan.stack), 'Stack'],
-            [`${plan.players * BUY_IN} €`, 'Bote'],
+            [`${plan.players * plan.buyIn} €`, 'Bote'],
           ]}
         />
-        <Prizes players={plan.players} />
-        <p className="muted center">Los niveles quedan fijos al empezar.</p>
+        <Prizes list={plan.prizes} buyIn={plan.buyIn} onEdit={() => setEditingPrizes(true)} />
+        <p className="muted center">Los niveles y los premios quedan fijos al empezar.</p>
+        {editingPrizes && <PrizeSheet players={plan.players} onClose={() => setEditingPrizes(false)} />}
       </div>
     )
   }
@@ -82,7 +96,7 @@ export function Timer({ clock, onGoToChips }: Props) {
   const chip = (value: number) => game.chips.find((c) => c.value === value)
   const left = playersLeft(game)
   const winner = left === 1
-  const prizeList = game.players ? prizes(game.players) : []
+  const prizeList = gamePrizes(game)
   const averageStack = game.players && game.stack && left ? (game.stack * game.players) / left : null
   // Stack medio en ciegas grandes: dice si la partida va lenta o rápida
   const average = averageStack !== null ? Math.round(averageStack / level.bigBlind) : null
@@ -216,7 +230,15 @@ export function Timer({ clock, onGoToChips }: Props) {
         ]}
       />
 
-      {game.players && <Prizes players={game.players} left={left} places={places} showPot />}
+      {game.players && (
+        <Prizes
+          list={prizeList}
+          buyIn={gameBuyIn(game)}
+          pot={game.players * gameBuyIn(game)}
+          left={left}
+          places={places}
+        />
+      )}
 
       {!winner && (
         <div className="timer-actions">
@@ -352,21 +374,24 @@ function Stats({ items }: { items: [ReactNode, string][] }) {
 }
 
 /**
- * Premios: cobra la mitad de la mesa y el último premiado recupera lo apostado.
+ * Premios del 1º al último premiado; se cambian antes de empezar (onEdit).
  * Con la partida en marcha marca los puestos ya decididos (con su nombre) y el siguiente.
  */
 function Prizes({
-  players,
+  list,
+  buyIn,
+  pot,
   left,
   places,
-  showPot = false,
+  onEdit,
 }: {
-  players: number
+  list: number[]
+  buyIn: number
+  pot?: number
   left?: number
   places?: Map<number, string>
-  showPot?: boolean
+  onEdit?: () => void
 }) {
-  const list = prizes(players)
   const bubble = left === list.length + 1
   const headsUp = left === 2
   return (
@@ -377,10 +402,15 @@ function Prizes({
           {bubble && <span className="badge">Burbuja</span>}
           {headsUp && <span className="badge">Mano a mano</span>}
         </h2>
-        {showPot && (
+        {pot !== undefined && (
           <span className="setup-label">
-            Bote <strong>{players * BUY_IN} €</strong>
+            Bote <strong>{pot} €</strong>
           </span>
+        )}
+        {onEdit && (
+          <button className="icon-btn" onClick={onEdit} aria-label="Cambiar los premios">
+            <PencilIcon />
+          </button>
         )}
       </div>
       <ol>
@@ -399,7 +429,7 @@ function Prizes({
               ) : upNext ? (
                 <small>siguiente</small>
               ) : (
-                list.length > 1 && amount === BUY_IN && <small>reintegro</small>
+                list.length > 1 && amount === buyIn && <small>reintegro</small>
               )}
             </li>
           )

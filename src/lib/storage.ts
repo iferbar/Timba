@@ -2,6 +2,7 @@ import { useCallback, useSyncExternalStore, type SetStateAction } from 'react'
 import type { AlertEvent } from './announcer'
 import type { ChipSet, StackMode } from './chips'
 import { DEFAULT_SETS } from './defaults'
+import { DEFAULT_PRIZE_CONFIG, type PrizeConfig } from './prizes'
 import type { Roster } from './roster'
 import type { Game } from './timer'
 
@@ -109,6 +110,11 @@ export function useBlindConfig() {
 
 export function useAlertConfig() {
   return usePersistentState('timba:alerts', DEFAULT_ALERT_CONFIG)
+}
+
+/** Buy-in y premios cambiados en la hoja Premios */
+export function usePrizeConfig() {
+  return usePersistentState<PrizeConfig>('timba:prizes', DEFAULT_PRIZE_CONFIG)
 }
 
 /** Amigos habituales y quién juega hoy */

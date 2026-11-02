@@ -17,6 +17,8 @@ import {
   moveButton,
   finishers,
   undoElimination,
+  gameBuyIn,
+  gamePrizes,
 } from './timer'
 
 const MIN = 60_000
@@ -147,5 +149,15 @@ describe('moveButton', () => {
   it('sin sorteo no hay botón que mover', () => {
     const g = { ...newGame(levels, [], 20), players: 2, names: ['Ana', 'Dani'] }
     expect(moveButton(g, 1)).toBe(g)
+  })
+})
+
+describe('premios de la partida', () => {
+  it('usa los guardados al empezar; las partidas antiguas, 5 € y el escalonado', () => {
+    const game = newGame(levels, [], 20)
+    expect(gamePrizes({ ...game, players: 7 })).toEqual([20, 10, 5])
+    expect(gameBuyIn(game)).toBe(5)
+    expect(gamePrizes({ ...game, players: 7, buyIn: 10, prizes: [50, 20] })).toEqual([50, 20])
+    expect(gamePrizes(game)).toEqual([])
   })
 })

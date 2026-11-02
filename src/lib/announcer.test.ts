@@ -86,4 +86,9 @@ describe('knockout', () => {
     expect(k.speech).toBe('Adiós, Ana. Segundo puesto, se lleva 10 euros. Iván gana la partida y se lleva 20 euros.')
     expect(k.banner).toMatchObject({ title: 'Ganador', big: 'Iván', subtitle: 'Se lleva 20 €' })
   })
+
+  it('con otro buy-in, recupera lo apostado quien cobra el buy-in', () => {
+    expect(knockout('Marta', 3, ['Ana', 'Iván'], [40, 20, 10], 10).speech).toContain('recupera sus 10 euros')
+    expect(knockout('Marta', 3, ['Ana', 'Iván'], [40, 25, 5], 10).speech).toContain('se lleva 5 euros')
+  })
 })

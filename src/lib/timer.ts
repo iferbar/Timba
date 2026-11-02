@@ -1,5 +1,6 @@
 import type { BlindLevel } from './blinds'
 import type { ChipColor } from './chips'
+import { BUY_IN, prizes } from './prizes'
 import { moveButtonSeat } from './seats'
 
 /**
@@ -30,6 +31,16 @@ export interface Game {
   dealer?: string
   /** Asiento (índice en names) que lleva el botón en esta mano */
   buttonSeat?: number
+  /** Buy-in y premios al empezar (partidas guardadas antes no los tienen: 5 € y el reparto escalonado) */
+  buyIn?: number
+  prizes?: number[]
+}
+
+export const gameBuyIn = (game: Game) => game.buyIn ?? BUY_IN
+
+/** Premios de la partida, del 1º al último premiado */
+export function gamePrizes(game: Game): number[] {
+  return game.prizes ?? (game.players ? prizes(game.players) : [])
 }
 
 export function newGame(levels: BlindLevel[], chips: ChipColor[], levelMinutes: number): Game {

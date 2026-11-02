@@ -1459,6 +1459,25 @@ input {
   color: var(--gold);
 }
 
+/* Hoja Premios */
+.stepper-value.prize-value {
+  min-width: 2.6em;
+  font-size: 1.25rem;
+}
+
+.prize-status {
+  margin: 0;
+  font-weight: 600;
+}
+
+.prize-status.ok {
+  color: var(--gold);
+}
+
+.prize-status.warn {
+  color: var(--danger);
+}
+
 .prizes li .prize-name {
   max-width: 100%;
   overflow: hidden;

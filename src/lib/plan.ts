@@ -1,8 +1,9 @@
 import { blindStructure, type BlindLevel } from './blinds'
 import { distribute, sortedChips, targetStackFor, type ChipColor, type ChipSet } from './chips'
+import { prizePlan } from './prizes'
 import { gameNames } from './roster'
 import { drawMatches } from './seats'
-import { useBlindConfig, useChipConfig, useRoster } from './storage'
+import { useBlindConfig, useChipConfig, usePrizeConfig, useRoster } from './storage'
 
 export interface GamePlan {
   set: ChipSet
@@ -14,6 +15,9 @@ export interface GamePlan {
   /** Quién empieza con el botón, si se ha sorteado */
   dealer?: string
   stack: number
+  /** Buy-in en euros y premios del 1º al último premiado */
+  buyIn: number
+  prizes: number[]
   levelMinutes: number
   durationMinutes: number
   levels: BlindLevel[]
@@ -24,6 +28,7 @@ export function useGamePlan(): GamePlan | null {
   const [chipConfig] = useChipConfig()
   const [blindConfig] = useBlindConfig()
   const [roster] = useRoster()
+  const [prizeConfig] = usePrizeConfig()
 
   const set = chipConfig.sets.find((s) => s.id === chipConfig.selectedSetId) ?? chipConfig.sets[0]
   if (!set) return null
@@ -44,6 +49,8 @@ export function useGamePlan(): GamePlan | null {
     players: chipConfig.players,
     ...namesFor(),
     stack,
+    buyIn: prizeConfig.buyIn,
+    prizes: prizePlan(chipConfig.players, prizeConfig),
     levelMinutes: blindConfig.levelMinutes,
     durationMinutes: blindConfig.durationMinutes,
     levels: blindStructure({
