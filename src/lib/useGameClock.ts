@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { unlockAudio, useWakeLock } from './alerts'
-import { levelSpeech, playersEvent, playersSpeech, showBanner, warningSpeech } from './announcer'
+import { knockout, levelSpeech, playersEvent, playersSpeech, showBanner, warningSpeech } from './announcer'
 import type { GamePlan } from './plan'
 import { prizes } from './prizes'
 import { announce } from './sounds'
 import { useAlertConfig, useGameStore } from './storage'
 import {
+  alivePlayers,
+  eliminate,
   goTo,
   isRunning,
   newGame,
@@ -15,6 +17,7 @@ import {
   remainingMs,
   setPlayersLeft,
   tick,
+  undoElimination,
   type Game,
 } from './timer'
 
@@ -89,7 +92,12 @@ export function useGameClock() {
       unlockAudio()
       const t = Date.now()
       setNow(t)
-      const game = { ...newGame(plan.levels, plan.chips, plan.levelMinutes), players: plan.players, stack: plan.stack }
+      const game = {
+        ...newGame(plan.levels, plan.chips, plan.levelMinutes),
+        players: plan.players,
+        stack: plan.stack,
+        names: plan.names,
+      }
       setStore({ game: play(game, t) })
     },
     toggle() {
@@ -118,6 +126,22 @@ export function useGameClock() {
         return playersLeft(next) === 1 ? pause(next, t) : next
       })
     },
+    // Con nombres: adiós con su puesto y premio (y burbuja, mano a mano o ganador si toca)
+    eliminate: (name: string) => {
+      if (!game?.players) return
+      const before = alivePlayers(game)
+      const alive = before.filter((n) => n !== name)
+      if (alive.length === 0 || alive.length === before.length) return
+      unlockAudio()
+      const { event, speech, banner } = knockout(name, before.length, alive, prizes(game.players))
+      announce(event, speech, alerts)
+      showBanner(banner)
+      update((g, t) => {
+        const next = eliminate(g, name)
+        return playersLeft(next) === 1 ? pause(next, t) : next
+      })
+    },
+    undoElimination: () => update((g) => undoElimination(g)),
     end: () => setStore({ game: null }),
   }
 }

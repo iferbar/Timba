@@ -161,6 +161,12 @@ export const FileIcon = () => (
   </Icon>
 )
 
+export const CheckIcon = () => (
+  <Icon strokeWidth="3">
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </Icon>
+)
+
 export const TrashIcon = () => (
   <Icon>
     <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />

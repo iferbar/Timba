@@ -93,6 +93,15 @@ const BUILT_IN: Record<AlertEvent, { duration: number; play: Synth }> = {
       bell(c, t + 0.3, 1047, 0.6, 0.4)
     },
   },
+  out: {
+    duration: 1.1,
+    play: (c, t) => {
+      clack(c, t)
+      horn(c, t + 0.1, 392, 0.22)
+      horn(c, t + 0.35, 330, 0.22)
+      horn(c, t + 0.6, 262, 0.5)
+    },
+  },
   bubble: {
     duration: 1.2,
     play: (c, t) => {
@@ -125,6 +134,7 @@ const VIBRATION: Record<AlertEvent, number[]> = {
   level: [300, 150, 300, 150, 600],
   colorUp: [300, 150, 300, 150, 300, 150, 600],
   warning: [150, 100, 150],
+  out: [200, 100, 400],
   bubble: [500, 200, 500],
   headsUp: [200, 100, 200],
   winner: [200, 100, 200, 100, 800],

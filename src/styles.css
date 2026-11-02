@@ -301,6 +301,40 @@ button {
   font-size: 0.85rem;
 }
 
+/* Nombres de los que juegan hoy, bajo el número de jugadores */
+.setup-names {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 6px;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: var(--text);
+  text-align: left;
+}
+
+.setup-names span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setup-names svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+.setup-names.mismatch {
+  color: var(--gold);
+}
+
 /* Reparto por jugador: cada ficha con cuántas recibe */
 .setup-deal {
   display: flex;
@@ -1079,10 +1113,14 @@ input {
 }
 
 .ring-winner {
+  max-width: 80%;
   font-family: var(--display);
   font-size: 9cqw;
   font-weight: 600;
+  line-height: 1.1;
   color: var(--text);
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .ring-label {
@@ -1351,6 +1389,14 @@ input {
 
 .prizes li.next small {
   color: var(--gold);
+}
+
+.prizes li .prize-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
 }
 
 .tabs {
@@ -1671,6 +1717,14 @@ input {
   font-variant-numeric: tabular-nums;
 }
 
+/* Nombres: más pequeños que las ciegas y partiendo línea si no caben */
+.alert-banner.names .alert-big {
+  max-width: 100%;
+  font-size: clamp(2.8rem, 15vw, 5rem);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 .alert-subtitle {
   color: var(--muted);
   font-size: 1.15rem;
@@ -1902,4 +1956,117 @@ input {
 
 .sound-btn:disabled {
   opacity: 0.35;
+}
+
+/* Hoja "Quién juega" */
+.names-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet .names-head .link {
+  align-self: auto;
+}
+
+.name-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 45dvh;
+  overflow-y: auto;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--felt-dark);
+}
+
+.name-rows li {
+  display: flex;
+  align-items: center;
+}
+
+.name-rows li + li {
+  border-top: 1px solid var(--card-border);
+}
+
+.name-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.name-toggle:disabled {
+  opacity: 0.4;
+}
+
+.name-check {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--card-border);
+  border-radius: 8px;
+}
+
+.name-toggle[aria-checked='true'] .name-check {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: #2a1f05;
+}
+
+.name-check svg {
+  width: 16px;
+  height: 16px;
+}
+
+.name-remove {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+}
+
+.name-remove svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Hoja "¿Quién cae?" */
+.knockout-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  max-height: 55dvh;
+  overflow-y: auto;
+}
+
+.knockout-grid button {
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--felt-dark);
+  font-size: 1.05rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.knockout-grid button:active {
+  border-color: var(--danger);
+  color: var(--danger);
 }

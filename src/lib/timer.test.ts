@@ -12,6 +12,10 @@ import {
   remainingMs,
   setPlayersLeft,
   tick,
+  alivePlayers,
+  eliminate,
+  finishers,
+  undoElimination,
 } from './timer'
 
 const MIN = 60_000
@@ -89,5 +93,39 @@ describe('jugadores que quedan', () => {
     expect(playersLeft(setPlayersLeft(game, 5))).toBe(5)
     expect(playersLeft(setPlayersLeft(game, 0))).toBe(1)
     expect(playersLeft(setPlayersLeft(game, 12))).toBe(8)
+  })
+})
+
+describe('eliminaciones con nombre', () => {
+  const named = { ...newGame(levels, [], 20), players: 4, names: ['Ana', 'Dani', 'Iván', 'Marta'] }
+
+  it('apunta quién cae, cuántos quedan y en qué puesto acaba', () => {
+    const g = eliminate(eliminate(named, 'Dani'), 'Marta')
+    expect(alivePlayers(g)).toEqual(['Ana', 'Iván'])
+    expect(playersLeft(g)).toBe(2)
+    expect([...finishers(g)]).toEqual([
+      [4, 'Dani'],
+      [3, 'Marta'],
+    ])
+  })
+
+  it('con uno solo vivo, ese es el ganador', () => {
+    const g = eliminate(eliminate(eliminate(named, 'Dani'), 'Marta'), 'Ana')
+    expect(finishers(g).get(1)).toBe('Iván')
+    // Al ganador no se le puede eliminar
+    expect(eliminate(g, 'Iván')).toBe(g)
+  })
+
+  it('no elimina dos veces ni a quien no juega', () => {
+    const g = eliminate(named, 'Dani')
+    expect(eliminate(g, 'Dani')).toBe(g)
+    expect(eliminate(g, 'Pepe')).toBe(g)
+  })
+
+  it('deshacer devuelve al último eliminado', () => {
+    const g = undoElimination(eliminate(eliminate(named, 'Dani'), 'Marta'))
+    expect(g.out).toEqual(['Dani'])
+    expect(playersLeft(g)).toBe(3)
+    expect(undoElimination(named)).toBe(named)
   })
 })

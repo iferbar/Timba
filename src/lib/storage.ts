@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore, type SetStateAction } from 'react'
 import type { ChipSet, StackMode } from './chips'
 import { DEFAULT_SETS } from './defaults'
+import type { Roster } from './roster'
 import type { Game } from './timer'
 
 export interface ChipConfig {
@@ -104,6 +105,11 @@ export function useBlindConfig() {
 
 export function useAlertConfig() {
   return usePersistentState('timba:alerts', DEFAULT_ALERT_CONFIG)
+}
+
+/** Amigos habituales y quién juega hoy */
+export function useRoster() {
+  return usePersistentState<Roster>('timba:roster', { names: [], playing: [] })
 }
 
 export function useGameStore() {

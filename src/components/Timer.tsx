@@ -3,10 +3,11 @@ import type { BlindLevel } from '../lib/blinds'
 import { formatNumber } from '../lib/format'
 import { useGamePlan } from '../lib/plan'
 import { BUY_IN, prizes } from '../lib/prizes'
-import { elapsedMs, formatClock, isRunning, playersLeft, remainingMs } from '../lib/timer'
+import { alivePlayers, elapsedMs, finishers, formatClock, isRunning, playersLeft, remainingMs } from '../lib/timer'
 import type { GameClock } from '../lib/useGameClock'
 import { formatHours, NoPlan } from './BlindStructure'
 import { Chip } from './Chip'
+import { KnockoutSheet } from './KnockoutSheet'
 import { StackCounter } from './StackCounter'
 import { ChipIcon, MinusIcon, NextIcon, PauseIcon, PlayIcon, PlusIcon, PrevIcon, RestartIcon, StopIcon } from './Icons'
 
@@ -26,6 +27,7 @@ export function Timer({ clock, onGoToChips }: Props) {
   const plan = useGamePlan()
   const { game, now } = clock
   const [counting, setCounting] = useState(false)
+  const [knocking, setKnocking] = useState(false)
 
   if (!game) {
     if (!plan) return <NoPlan onGoToChips={onGoToChips} />
@@ -69,14 +71,19 @@ export function Timer({ clock, onGoToChips }: Props) {
   // Stack medio en ciegas grandes: dice si la partida va lenta o rápida
   const average = averageStack !== null ? Math.round(averageStack / level.bigBlind) : null
   const retired = game.levels.slice(0, game.index + 1).flatMap((l) => l.colorUp)
+  // Con nombres, el − pregunta quién cae y el + devuelve al último eliminado
+  const named = Boolean(game.names)
+  const alive = alivePlayers(game)
+  const places = finishers(game)
+  const lastOut = game.out?.at(-1)
 
   return (
     <div className="screen timer">
       {winner ? (
         <Ring fraction={1}>
-          <span className="ring-winner">Ganador</span>
+          <span className="ring-winner">{places.get(1) ?? 'Ganador'}</span>
           {prizeList[0] && <span className="timer-clock">{prizeList[0]} €</span>}
-          <span className="ring-label">partida terminada</span>
+          <span className="ring-label">{places.has(1) ? 'gana la partida' : 'partida terminada'}</span>
         </Ring>
       ) : (
         <Ring fraction={rem / game.levelMs} warning={running && rem <= ONE_MINUTE} paused={!running}>
@@ -133,9 +140,9 @@ export function Timer({ clock, onGoToChips }: Props) {
             game.players && left ? (
               <span className="mini-stepper">
                 <button
-                  onClick={() => clock.setPlayersLeft(left - 1)}
+                  onClick={() => (named ? setKnocking(true) : clock.setPlayersLeft(left - 1))}
                   disabled={left <= 1}
-                  aria-label="Apuntar una eliminación"
+                  aria-label={named ? 'Apuntar quién cae' : 'Apuntar una eliminación'}
                 >
                   <MinusIcon />
                 </button>
@@ -144,9 +151,9 @@ export function Timer({ clock, onGoToChips }: Props) {
                   <small>/{game.players}</small>
                 </span>
                 <button
-                  onClick={() => clock.setPlayersLeft(left + 1)}
-                  disabled={left >= game.players}
-                  aria-label="Deshacer la eliminación"
+                  onClick={() => (named ? clock.undoElimination() : clock.setPlayersLeft(left + 1))}
+                  disabled={named ? !lastOut : left >= game.players}
+                  aria-label={lastOut ? `Deshacer: vuelve ${lastOut}` : 'Deshacer la eliminación'}
                 >
                   <PlusIcon />
                 </button>
@@ -161,7 +168,7 @@ export function Timer({ clock, onGoToChips }: Props) {
         ]}
       />
 
-      {game.players && <Prizes players={game.players} left={left} showPot />}
+      {game.players && <Prizes players={game.players} left={left} places={places} showPot />}
 
       {!winner && (
         <div className="timer-actions">
@@ -183,6 +190,15 @@ export function Timer({ clock, onGoToChips }: Props) {
             Terminar
           </button>
         </div>
+      )}
+
+      {knocking && (
+        <KnockoutSheet
+          alive={alive}
+          prize={prizeList[alive.length - 1] ?? 0}
+          onPick={clock.eliminate}
+          onClose={() => setKnocking(false)}
+        />
       )}
 
       {counting && (
@@ -273,9 +289,19 @@ function Stats({ items }: { items: [ReactNode, string][] }) {
 
 /**
  * Premios: cobra la mitad de la mesa y el último premiado recupera lo apostado.
- * Con la partida en marcha marca los puestos ya decididos y el siguiente.
+ * Con la partida en marcha marca los puestos ya decididos (con su nombre) y el siguiente.
  */
-function Prizes({ players, left, showPot = false }: { players: number; left?: number; showPot?: boolean }) {
+function Prizes({
+  players,
+  left,
+  places,
+  showPot = false,
+}: {
+  players: number
+  left?: number
+  places?: Map<number, string>
+  showPot?: boolean
+}) {
   const list = prizes(players)
   const bubble = left === list.length + 1
   const headsUp = left === 2
@@ -298,11 +324,19 @@ function Prizes({ players, left, showPot = false }: { players: number; left?: nu
           const place = i + 1
           const done = left !== undefined && place > left
           const upNext = left !== undefined && left > 1 && place === left
+          const name = places?.get(place)
           return (
-            <li key={i} className={`${i === 0 ? 'first' : ''} ${done ? 'done' : ''} ${upNext ? 'next' : ''}`}>
+            // Con nombre el puesto decidido se lee entero: es la clasificación
+            <li key={i} className={`${i === 0 ? 'first' : ''} ${done && !name ? 'done' : ''} ${upNext ? 'next' : ''}`}>
               <span className="setup-label">{place}º</span>
               <strong>{amount} €</strong>
-              {upNext ? <small>siguiente</small> : list.length > 1 && amount === BUY_IN && <small>reintegro</small>}
+              {name ? (
+                <small className="prize-name">{name}</small>
+              ) : upNext ? (
+                <small>siguiente</small>
+              ) : (
+                list.length > 1 && amount === BUY_IN && <small>reintegro</small>
+              )}
             </li>
           )
         })}

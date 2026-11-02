@@ -1,12 +1,13 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { clampPlayers, distribute, MAX_PLAYERS, MIN_PLAYERS, sortedChips, targetStackFor } from '../lib/chips'
 import { formatNumber } from '../lib/format'
 import { useGamePlan } from '../lib/plan'
-import { useBlindConfig, useChipConfig } from '../lib/storage'
+import { useBlindConfig, useChipConfig, useRoster } from '../lib/storage'
 import { formatClock, isRunning, remainingMs } from '../lib/timer'
 import type { GameClock } from '../lib/useGameClock'
 import { Chip } from './Chip'
 import { ChevronIcon, ClockIcon, MinusIcon, PlayIcon, PlusIcon, UsersIcon } from './Icons'
+import { PlayersSheet } from './PlayersSheet'
 
 const ChipScene = lazy(() => import('./ChipScene'))
 
@@ -21,6 +22,8 @@ export function Home({ clock, onNavigate }: Props) {
   const plan = useGamePlan()
   const [chipConfig, setChipConfig] = useChipConfig()
   const [blindConfig] = useBlindConfig()
+  const [roster] = useRoster()
+  const [naming, setNaming] = useState(false)
   const { game, now } = clock
 
   const set = chipConfig.sets.find((s) => s.id === chipConfig.selectedSetId) ?? chipConfig.sets[0]
@@ -40,6 +43,9 @@ export function Home({ clock, onNavigate }: Props) {
   }
 
   const level = game?.levels[game.index]
+  const named = roster.playing.length
+  // Los nombres solo cuentan si cuadran con los jugadores: si no, se avisa
+  const namesMatch = named === chipConfig.players
 
   return (
     <div className="home">
@@ -94,6 +100,17 @@ export function Home({ clock, onNavigate }: Props) {
             </div>
           </div>
 
+          <button className={`setup-names ${named > 0 && !namesMatch ? 'mismatch' : ''}`} onClick={() => setNaming(true)}>
+            <span>
+              {named === 0
+                ? 'Poner nombres a los jugadores'
+                : namesMatch
+                  ? roster.playing.join(', ')
+                  : `${named} con nombre de ${chipConfig.players} jugadores: toca para ajustar`}
+            </span>
+            <ChevronIcon />
+          </button>
+
           <button className="setup-deal" onClick={() => onNavigate('fichas')}>
             <span className="deal-head">
               <span className="setup-label">Cada jugador recibe</span>
@@ -137,6 +154,7 @@ export function Home({ clock, onNavigate }: Props) {
           </button>
         </section>
       </div>
+      {naming && <PlayersSheet onClose={() => setNaming(false)} />}
     </div>
   )
 }

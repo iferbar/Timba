@@ -21,6 +21,10 @@ export interface Game {
   stack?: number
   /** Jugadores que siguen vivos; sin apuntar eliminaciones, todos */
   left?: number
+  /** Nombres de los jugadores (opcionales: sin nombres solo se cuentan) */
+  names?: string[]
+  /** Eliminados con nombre por orden de caída: el primero acabó el último */
+  out?: string[]
 }
 
 export function newGame(levels: BlindLevel[], chips: ChipColor[], levelMinutes: number): Game {
@@ -79,6 +83,38 @@ export function playersLeft(game: Game): number | undefined {
 export function setPlayersLeft(game: Game, left: number): Game {
   if (!game.players) return game
   return { ...game, left: Math.min(game.players, Math.max(1, left)) }
+}
+
+/** Jugadores con nombre que siguen vivos */
+export function alivePlayers(game: Game): string[] {
+  const out = game.out ?? []
+  return (game.names ?? []).filter((n) => !out.includes(n))
+}
+
+/** Apunta que ha caído un jugador con nombre; su puesto es el número de vivos que había */
+export function eliminate(game: Game, name: string): Game {
+  const alive = alivePlayers(game)
+  if (!game.players || alive.length <= 1 || !alive.includes(name)) return game
+  const out = [...(game.out ?? []), name]
+  return { ...game, out, left: game.players - out.length }
+}
+
+/** Devuelve a la partida al último eliminado (por si se apuntó mal) */
+export function undoElimination(game: Game): Game {
+  if (!game.players || !game.out?.length) return game
+  const out = game.out.slice(0, -1)
+  return { ...game, out, left: game.players - out.length }
+}
+
+/** Quién ha acabado en cada puesto ya decidido (1 = ganador) */
+export function finishers(game: Game): Map<number, string> {
+  const places = new Map<number, string>()
+  const players = game.players
+  if (!players) return places
+  game.out?.forEach((name, i) => places.set(players - i, name))
+  const alive = alivePlayers(game)
+  if (game.names && alive.length === 1) places.set(1, alive[0])
+  return places
 }
 
 export function elapsedMs(game: Game, now: number): number {

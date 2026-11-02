@@ -21,7 +21,7 @@ export function AlertBanner() {
 
   if (!banner) return null
   return (
-    <button className={`alert-banner ${banner.event}`} onClick={() => showBanner(null)} aria-live="assertive">
+    <button className={`alert-banner ${banner.event} ${banner.name ? 'names' : ''}`} onClick={() => showBanner(null)} aria-live="assertive">
       <span className="alert-title">{banner.title}</span>
       {banner.big && <strong className="alert-big">{banner.big}</strong>}
       {banner.subtitle && <span className="alert-subtitle">{banner.subtitle}</span>}

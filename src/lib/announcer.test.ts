@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { BlindLevel } from './blinds'
-import { levelSpeech, playersEvent, warningSpeech } from './announcer'
+import { knockout, levelSpeech, placeWords, playersEvent, warningSpeech } from './announcer'
+import { prizes } from './prizes'
 
 const level = (over: Partial<BlindLevel> = {}): BlindLevel => ({
   level: 5,
@@ -45,5 +46,44 @@ describe('playersEvent', () => {
 
   it('con 3 jugadores la burbuja es el mano a mano', () => {
     expect(playersEvent(3, 2, 1)).toBe('headsUp')
+  })
+})
+
+describe('knockout', () => {
+  // 7 jugadores: cobran 3 (20 · 10 · 5)
+  const list = prizes(7)
+
+  it('dice el puesto en palabras', () => {
+    expect(placeWords(1)).toBe('primer puesto')
+    expect(placeWords(3)).toBe('tercer puesto')
+    expect(placeWords(7)).toBe('séptimo puesto')
+    expect(placeWords(12)).toBe('puesto 12')
+  })
+
+  it('despide sin premio a quien cae fuera', () => {
+    const k = knockout('Dani', 7, ['Ana', 'Iván', 'Laura', 'Marta', 'Pablo', 'Sergio'], list)
+    expect(k.event).toBe('out')
+    expect(k.speech).toBe('Adiós, Dani. Queda en séptimo puesto.')
+    expect(k.banner).toMatchObject({ title: 'Adiós', big: 'Dani', subtitle: '7º puesto' })
+  })
+
+  it('avisa de la burbuja al caer el que la deja', () => {
+    const k = knockout('Pablo', 5, ['Ana', 'Iván', 'Laura', 'Marta'], list)
+    expect(k.event).toBe('bubble')
+    expect(k.speech).toBe('Adiós, Pablo. Queda en quinto puesto. Burbuja: el siguiente en caer se va sin premio.')
+  })
+
+  it('el último premiado recupera lo apostado y empieza el mano a mano', () => {
+    const k = knockout('Marta', 3, ['Ana', 'Iván'], list)
+    expect(k.event).toBe('headsUp')
+    expect(k.speech).toBe('Adiós, Marta. Tercer puesto, recupera sus 5 euros. Mano a mano entre Ana y Iván.')
+    expect(k.banner).toMatchObject({ big: 'Ana y Iván', subtitle: 'Adiós, Marta: 3º puesto · 5 €' })
+  })
+
+  it('al caer el segundo anuncia al ganador', () => {
+    const k = knockout('Ana', 2, ['Iván'], list)
+    expect(k.event).toBe('winner')
+    expect(k.speech).toBe('Adiós, Ana. Segundo puesto, se lleva 10 euros. Iván gana la partida y se lleva 20 euros.')
+    expect(k.banner).toMatchObject({ title: 'Ganador', big: 'Iván', subtitle: 'Se lleva 20 €' })
   })
 })
