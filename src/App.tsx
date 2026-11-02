@@ -6,7 +6,7 @@ import { Home, type Tab } from './components/Home'
 import { ChipIcon, ClockIcon, HomeIcon, LevelsIcon, SpadeIcon, SpeakerIcon, SpeakerOffIcon } from './components/Icons'
 import { SoundSettings } from './components/SoundSettings'
 import { Timer } from './components/Timer'
-import { loadCustomSounds } from './lib/sounds'
+import { loadCustomSounds, loadLibrarySounds } from './lib/sounds'
 import { useAlertConfig } from './lib/storage'
 import { formatClock, isRunning, remainingMs } from './lib/timer'
 import { useGameClock } from './lib/useGameClock'
@@ -28,6 +28,7 @@ export function App() {
   // Sonidos grabados o elegidos en otra sesión
   useEffect(() => {
     void loadCustomSounds()
+    void loadLibrarySounds()
   }, [])
 
   const goToChips = () => setTab('fichas')

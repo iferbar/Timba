@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core'
 import { useSyncExternalStore } from 'react'
 import { audioContext, vibrate } from './alerts'
 import type { AlertEvent } from './announcer'
+import { CUSTOM, labelFromFile, NONE, resolveSound, SYNTH_SOUND } from './soundChoice'
 import { deleteStoredSound, loadStoredSounds, saveStoredSound } from './soundStore'
 import type { AlertConfig } from './storage'
 
@@ -65,9 +66,53 @@ function horn(c: AudioContext, at: number, freq: number, duration: number) {
   osc.stop(at + duration + 0.05)
 }
 
-/** Sonido de cada momento y lo que dura (para que la voz entre después) */
-const BUILT_IN: Record<AlertEvent, { duration: number; play: Synth }> = {
-  level: {
+/** Gong: tono grave con parciales inarmónicos que tarda en apagarse */
+function gong(c: AudioContext, at: number) {
+  for (const [ratio, volume] of [
+    [1, 0.6],
+    [1.48, 0.3],
+    [2.1, 0.22],
+    [2.9, 0.12],
+  ]) {
+    const osc = c.createOscillator()
+    const gain = c.createGain()
+    osc.type = 'sine'
+    osc.frequency.value = 110 * ratio
+    gain.gain.setValueAtTime(0.0001, at)
+    gain.gain.exponentialRampToValueAtTime(volume, at + 0.04)
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 3)
+    osc.connect(gain).connect(c.destination)
+    osc.start(at)
+    osc.stop(at + 3.05)
+  }
+}
+
+/** Pitido corto, como un reloj de cocina */
+function beep(c: AudioContext, at: number, freq: number, duration: number) {
+  const osc = c.createOscillator()
+  const gain = c.createGain()
+  osc.type = 'square'
+  osc.frequency.value = freq
+  gain.gain.setValueAtTime(0.0001, at)
+  gain.gain.exponentialRampToValueAtTime(0.15, at + 0.01)
+  gain.gain.setValueAtTime(0.15, at + duration - 0.02)
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + duration)
+  osc.connect(gain).connect(c.destination)
+  osc.start(at)
+  osc.stop(at + duration + 0.05)
+}
+
+interface Synthesized {
+  label: string
+  /** Lo que dura, para que la voz entre después */
+  duration: number
+  play: Synth
+}
+
+/** Sonidos generados: el de cada momento (SYNTH_SOUND) y otros para elegir */
+const SYNTH: Record<string, Synthesized> = {
+  'chips-bells': {
+    label: 'Fichas y campanas',
     duration: 1.3,
     play: (c, t) => {
       clack(c, t)
@@ -77,7 +122,8 @@ const BUILT_IN: Record<AlertEvent, { duration: number; play: Synth }> = {
       bell(c, t + 0.5, 1047, 0.8)
     },
   },
-  colorUp: {
+  'chips-arpeggio': {
+    label: 'Fichas y arpegio',
     duration: 1.6,
     play: (c, t) => {
       for (let i = 0; i < 6; i++) clack(c, t + i * 0.045, 0.6)
@@ -86,14 +132,16 @@ const BUILT_IN: Record<AlertEvent, { duration: number; play: Synth }> = {
       bell(c, t + 0.7, 1319, 0.9)
     },
   },
-  warning: {
+  'double-bell': {
+    label: 'Campanita doble',
     duration: 0.9,
     play: (c, t) => {
       bell(c, t, 1047, 0.45, 0.4)
       bell(c, t + 0.3, 1047, 0.6, 0.4)
     },
   },
-  out: {
+  farewell: {
+    label: 'Despedida',
     duration: 1.1,
     play: (c, t) => {
       clack(c, t)
@@ -102,7 +150,8 @@ const BUILT_IN: Record<AlertEvent, { duration: number; play: Synth }> = {
       horn(c, t + 0.6, 262, 0.5)
     },
   },
-  bubble: {
+  'low-horn': {
+    label: 'Trompeta grave',
     duration: 1.2,
     play: (c, t) => {
       horn(c, t, 196, 0.25)
@@ -110,7 +159,8 @@ const BUILT_IN: Record<AlertEvent, { duration: number; play: Synth }> = {
       horn(c, t + 0.7, 294, 0.5)
     },
   },
-  headsUp: {
+  'chips-two-bells': {
+    label: 'Fichas y dos campanas',
     duration: 1.0,
     play: (c, t) => {
       clack(c, t)
@@ -118,7 +168,8 @@ const BUILT_IN: Record<AlertEvent, { duration: number; play: Synth }> = {
       bell(c, t + 0.35, 784, 0.7)
     },
   },
-  winner: {
+  fanfare: {
+    label: 'Fanfarria',
     duration: 1.6,
     play: (c, t) => {
       horn(c, t, 523, 0.18)
@@ -128,7 +179,63 @@ const BUILT_IN: Record<AlertEvent, { duration: number; play: Synth }> = {
       for (let i = 0; i < 5; i++) clack(c, t + 0.5 + i * 0.05, 0.5)
     },
   },
+  gong: {
+    label: 'Gong',
+    duration: 1.4,
+    play: gong,
+  },
+  'desk-bell': {
+    label: 'Timbre de mostrador',
+    duration: 0.8,
+    play: (c, t) => bell(c, t, 1568, 1.4, 0.55),
+  },
+  beeps: {
+    label: 'Pitidos',
+    duration: 0.75,
+    play: (c, t) => {
+      for (let i = 0; i < 3; i++) beep(c, t + i * 0.22, 880, 0.12)
+    },
+  },
+  'chip-shower': {
+    label: 'Lluvia de fichas',
+    duration: 1.0,
+    play: (c, t) => {
+      for (let i = 0; i < 14; i++) clack(c, t + i * 0.05 + Math.random() * 0.03, 0.4 + Math.random() * 0.3)
+    },
+  },
 }
+
+// --- Archivos de la app: los audios puestos en src/assets/sounds van dentro de la app ---
+
+const FILE_URLS = import.meta.glob<string>('../assets/sounds/*.{mp3,ogg,wav,m4a,aac}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+})
+const FILES = Object.entries(FILE_URLS)
+  .map(([path, url]) => ({ id: `file:${path.split('/').pop()}`, label: labelFromFile(path), url }))
+  .sort((a, b) => a.label.localeCompare(b.label, 'es'))
+const fileBuffers = new Map<string, AudioBuffer>()
+
+/** Decodifica los archivos de la app al arrancar, para que suenen al momento */
+export async function loadLibrarySounds() {
+  for (const file of FILES) {
+    try {
+      const buffer = await decode(await (await fetch(file.url)).blob())
+      if (buffer) fileBuffers.set(file.id, buffer)
+    } catch {
+      // Sin ese archivo suena el de serie
+    }
+  }
+}
+
+/** Lo que se puede elegir para cada momento */
+export const SOUND_OPTIONS = {
+  synth: Object.entries(SYNTH).map(([id, { label }]) => ({ id, label })),
+  files: FILES.map(({ id, label }) => ({ id, label })),
+}
+
+const soundExists = (id: string) => id in SYNTH || FILES.some((file) => file.id === id)
 
 const VIBRATION: Record<AlertEvent, number[]> = {
   level: [300, 150, 300, 150, 600],
@@ -214,12 +321,17 @@ export function useCustomSounds(): Set<AlertEvent> {
   )
 }
 
-/** Suena el sonido del momento (propio o de serie) y devuelve cuánto dura, en segundos */
-export function playSound(event: AlertEvent): number {
+/** Sonido que toca en un momento según lo elegido en los ajustes */
+export function soundFor(event: AlertEvent, config: AlertConfig): string {
+  return resolveSound(event, config.sounds, custom.has(event), soundExists)
+}
+
+/** Suena un sonido de la biblioteca (o el propio del momento) y devuelve cuánto dura, en segundos */
+export function playSoundId(id: string, event: AlertEvent): number {
   const c = audioContext()
-  if (!c) return 0
+  if (!c || id === NONE) return 0
   const t = c.currentTime + 0.02
-  const buffer = custom.get(event)
+  const buffer = id === CUSTOM ? custom.get(event) : fileBuffers.get(id)
   if (buffer) {
     const src = c.createBufferSource()
     src.buffer = buffer
@@ -227,8 +339,14 @@ export function playSound(event: AlertEvent): number {
     src.start(t)
     return buffer.duration
   }
-  BUILT_IN[event].play(c, t)
-  return BUILT_IN[event].duration
+  // Un archivo que falta o aún no se ha cargado suena como el generado del momento
+  const synth = SYNTH[id] ?? SYNTH[SYNTH_SOUND[event]]
+  synth.play(c, t)
+  return synth.duration
+}
+
+export function playSound(event: AlertEvent, config: AlertConfig): number {
+  return playSoundId(soundFor(event, config), event)
 }
 
 // --- Voz ---
@@ -257,6 +375,6 @@ export function speak(text: string) {
 export function announce(event: AlertEvent, speech: string, config: AlertConfig) {
   if (config.vibration) vibrate(VIBRATION[event])
   if (config.muted) return
-  const duration = playSound(event)
+  const duration = playSound(event, config)
   if (config.voice && speech) setTimeout(() => speak(speech), duration * 1000 + 150)
 }

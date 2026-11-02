@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { unlockAudio } from '../lib/alerts'
 import { ALERT_EVENTS, levelSpeech, type AlertEvent } from '../lib/announcer'
-import { playSound, removeCustomSound, setCustomSound, speak, useCustomSounds } from '../lib/sounds'
+import { CUSTOM, DEFAULT_SOUND, NONE } from '../lib/soundChoice'
+import {
+  playSoundId,
+  removeCustomSound,
+  setCustomSound,
+  soundFor,
+  SOUND_OPTIONS,
+  speak,
+  useCustomSounds,
+} from '../lib/sounds'
 import { useAlertConfig } from '../lib/storage'
 import { ChevronIcon, CloseIcon, FileIcon, MicIcon, PlayIcon, StopIcon, TrashIcon } from './Icons'
 
@@ -11,8 +20,8 @@ const MAX_RECORD_SECONDS = 8
 const MAX_FILE_BYTES = 2 * 1024 * 1024
 
 /**
- * Hoja de ajustes de sonido: silencio, voz, vibración, aviso previo y un
- * sonido propio (grabado o elegido del móvil) para cada momento.
+ * Hoja de ajustes de sonido: silencio, voz, vibración, aviso previo y, para
+ * cada momento, un sonido de la biblioteca o uno propio (grabado o del móvil).
  */
 export function SoundSettings({ onClose }: { onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -47,10 +56,27 @@ export function SoundSettings({ onClose }: { onClose: () => void }) {
   // Cerrar la hoja a media grabación la guarda igualmente
   useEffect(() => stopRecording, [])
 
+  // Elegir un sonido lo hace sonar, para oír cómo queda
+  const choose = (event: AlertEvent, id: string) => {
+    setConfig((c) => ({ ...c, sounds: { ...c.sounds, [event]: id } }))
+    playSoundId(id, event)
+  }
+
   const save = async (event: AlertEvent, blob: Blob, failure: string) => {
-    if (await setCustomSound(event, blob)) playSound(event)
+    if (await setCustomSound(event, blob)) choose(event, CUSTOM)
     else setError(failure)
   }
+
+  const removeOwn = (event: AlertEvent) => {
+    void removeCustomSound(event)
+    setConfig((c) => {
+      const sounds = { ...c.sounds }
+      if (sounds[event] === CUSTOM) delete sounds[event]
+      return { ...c, sounds }
+    })
+  }
+
+  const changed = ALERT_EVENTS.filter(({ event }) => soundFor(event, config) !== DEFAULT_SOUND[event]).length
 
   const startRecording = async (event: AlertEvent) => {
     setError(null)
@@ -149,7 +175,7 @@ export function SoundSettings({ onClose }: { onClose: () => void }) {
           <summary>
             <span>
               Personalizar sonidos
-              {customs.size > 0 && <small>{customs.size === 1 ? '1 propio' : `${customs.size} propios`}</small>}
+              {changed > 0 && <small>{changed === 1 ? '1 cambiado' : `${changed} cambiados`}</small>}
             </span>
             <ChevronIcon />
           </summary>
@@ -157,11 +183,12 @@ export function SoundSettings({ onClose }: { onClose: () => void }) {
             {ALERT_EVENTS.map(({ event, label }) => {
               const own = customs.has(event)
               const isRecording = recording?.event === event
+              const choice = soundFor(event, config)
               return (
                 <li key={event}>
                   <button
                     className="sound-btn play"
-                    onClick={() => playSound(event)}
+                    onClick={() => playSoundId(choice, event)}
                     aria-label={`Escuchar: ${label}`}
                   >
                     <PlayIcon />
@@ -171,7 +198,32 @@ export function SoundSettings({ onClose }: { onClose: () => void }) {
                     {isRecording ? (
                       <small className="recording">Grabando… {MAX_RECORD_SECONDS - recording.seconds} s</small>
                     ) : (
-                      own && <small>Sonido propio</small>
+                      <select
+                        value={choice}
+                        onChange={(e) => choose(event, e.target.value)}
+                        aria-label={`Sonido para: ${label}`}
+                      >
+                        <optgroup label="De serie">
+                          {SOUND_OPTIONS.synth.map((o) => (
+                            <option key={o.id} value={o.id}>
+                              {o.label}
+                              {o.id === DEFAULT_SOUND[event] ? ' ★' : ''}
+                            </option>
+                          ))}
+                        </optgroup>
+                        {SOUND_OPTIONS.files.length > 0 && (
+                          <optgroup label="Sonidos de la app">
+                            {SOUND_OPTIONS.files.map((o) => (
+                              <option key={o.id} value={o.id}>
+                                {o.label}
+                                {o.id === DEFAULT_SOUND[event] ? ' ★' : ''}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {own && <option value={CUSTOM}>Propio (grabado o del móvil)</option>}
+                        <option value={NONE}>Sin sonido</option>
+                      </select>
                     )}
                   </span>
                   {isRecording ? (
@@ -199,8 +251,8 @@ export function SoundSettings({ onClose }: { onClose: () => void }) {
                       {own && (
                         <button
                           className="sound-btn"
-                          onClick={() => void removeCustomSound(event)}
-                          aria-label={`Volver al de casino: ${label}`}
+                          onClick={() => removeOwn(event)}
+                          aria-label={`Borrar el sonido propio: ${label}`}
                         >
                           <TrashIcon />
                         </button>
@@ -213,7 +265,8 @@ export function SoundSettings({ onClose }: { onClose: () => void }) {
           </ul>
           {error && <p className="note">{error}</p>}
           <p className="muted">
-            Graba hasta {MAX_RECORD_SECONDS} s o elige un audio del móvil. Tras el sonido, la voz dice las ciegas.
+            Elige uno de la lista (★ el de serie), graba hasta {MAX_RECORD_SECONDS} s o sube un audio del móvil. Tras
+            el sonido, la voz dice las ciegas.
           </p>
         </details>
 

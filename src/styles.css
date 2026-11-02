@@ -1987,6 +1987,19 @@ input {
   font-weight: 400;
 }
 
+.sound-name select {
+  max-width: 100%;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--felt-dark);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
 .sound-name small.recording {
   color: var(--danger);
 }

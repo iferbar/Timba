@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore, type SetStateAction } from 'react'
+import type { AlertEvent } from './announcer'
 import type { ChipSet, StackMode } from './chips'
 import { DEFAULT_SETS } from './defaults'
 import type { Roster } from './roster'
@@ -25,6 +26,8 @@ export interface AlertConfig {
   vibration: boolean
   /** Aviso antes de que suba el nivel, en minutos (0 = sin aviso) */
   warnMinutes: number
+  /** Sonido elegido para cada momento; sin elegir, el de serie (ver soundChoice.ts) */
+  sounds: Partial<Record<AlertEvent, string>>
 }
 
 const DEFAULT_CHIP_CONFIG: ChipConfig = {
@@ -45,6 +48,7 @@ const DEFAULT_ALERT_CONFIG: AlertConfig = {
   voice: true,
   vibration: true,
   warnMinutes: 1,
+  sounds: {},
 }
 
 function load<T extends object>(key: string, fallback: T): T {
