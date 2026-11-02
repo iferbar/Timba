@@ -38,9 +38,9 @@ export function BlindStructure({ clock, onGoToChips }: Props) {
     <div className="screen">
       <section className="card level-hero">
         <div className="level-hero-head">
-          <span className="setup-label">{game ? 'Nivel actual' : 'Primer nivel'}</span>
+          <span className="setup-label">{game ? 'Nivel actual' : 'Empieza'}</span>
           <span className="setup-label">
-            Nivel {level.level} de {levels.length}
+            {game ? `Nivel ${level.level} de ${levels.length}` : `${levels.length} niveles`}
           </span>
         </div>
         <strong className="level-hero-blinds">

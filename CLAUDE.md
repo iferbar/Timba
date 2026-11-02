@@ -60,9 +60,10 @@ Los sets son editables en la app (cada uno trae uno distinto y los valores puede
 - `src/lib/chips.ts`: algoritmo de reparto de fichas (lógica pura, con tests en `chips.test.ts`)
 - `src/lib/blinds.ts`: estructura de ciegas (curva exponencial como Pokersoup: al llegar a la duración objetivo, ciega grande ≈ fichas totales / 12; valores redondeados a cantidades pagables y avisos de color-up, juntando los que caerían en niveles seguidos). Tests en `blinds.test.ts`
 - `src/lib/prizes.ts`: reparto del bote (`prizes(jugadores)`). Tests en `prizes.test.ts`. Se ve en el Reloj
+- `src/lib/stackCount.ts`: contar un stack por colores, ciegas grandes y cambio del color-up. Lo usa la hoja "Mi stack" del Reloj (`StackCounter.tsx`, un `<dialog>` nativo que no guarda nada). Tests en `stackCount.test.ts`
 - `src/lib/format.ts`: `formatNumber` (punto de miles siempre, "4.500"); usarlo en vez de `toLocaleString`
 - `src/lib/plan.ts`: `useGamePlan()`, la partida configurada (fichas + ciegas) que usan Ciegas y Reloj
-- `src/lib/timer.ts`: lógica pura del cronómetro, basada en marcas de reloj (`endsAt`) para sobrevivir a pantalla bloqueada y recargas. Tests en `timer.test.ts`
+- `src/lib/timer.ts`: lógica pura del cronómetro, basada en marcas de reloj (`endsAt`) para sobrevivir a pantalla bloqueada y recargas; guarda también los jugadores que quedan (eliminaciones apuntadas en el Reloj). Tests en `timer.test.ts`
 - `src/lib/useGameClock.ts`: reloj de la partida a nivel de App (avanza niveles y avisa aunque se esté en otra pestaña)
 - `src/lib/alerts.ts`: sonidos (Web Audio), vibración y Wake Lock
 - `src/lib/storage.ts`: configuración y partida en curso guardadas en localStorage. Una sola copia en memoria por clave (`useSyncExternalStore`): un cambio en una pantalla (p. ej. jugadores en Inicio) se ve al momento en las demás

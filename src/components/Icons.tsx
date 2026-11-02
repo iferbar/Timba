@@ -113,3 +113,22 @@ export const PencilIcon = () => (
     <path d="m13.5 6.5 4 4" />
   </Icon>
 )
+
+export const RestartIcon = () => (
+  <Icon>
+    <path d="M4 12a8 8 0 1 0 2.4-5.7" />
+    <path d="M4 4v4h4" />
+  </Icon>
+)
+
+export const StopIcon = () => (
+  <Icon>
+    <rect x="6" y="6" width="12" height="12" rx="2" />
+  </Icon>
+)
+
+export const CloseIcon = () => (
+  <Icon>
+    <path d="M6 6l12 12M18 6 6 18" />
+  </Icon>
+)

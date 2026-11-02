@@ -975,8 +975,16 @@ input {
   text-align: center;
 }
 
-/* Reloj: pensado para leerse desde la otra punta de la mesa */
+/* Reloj: pensado para leerse desde la otra punta de la mesa y caber sin scroll */
+/* En el Reloj la pantalla ocupa todo el alto y el anillo se queda el hueco libre */
+.tab-reloj main {
+  display: flex;
+  flex-direction: column;
+}
+
 .timer {
+  flex: 1;
+  gap: 10px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -984,79 +992,31 @@ input {
   width: 100%;
 }
 
-.timer-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--card-border);
-  background: var(--felt-dark);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.status-pill.live {
-  color: #8fe0a8;
-  border-color: rgba(143, 224, 168, 0.35);
-}
-
-.status-pill.live .status-dot {
-  box-shadow: 0 0 0 0 rgba(143, 224, 168, 0.6);
-  animation: live-pulse 2s ease-out infinite;
-}
-
-@keyframes live-pulse {
-  to {
-    box-shadow: 0 0 0 8px rgba(143, 224, 168, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .status-pill.live .status-dot {
-    animation: none;
-  }
-}
-
-.timer-level {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
 .badge {
+  margin-left: 8px;
   padding: 2px 8px;
   border-radius: 999px;
   background: rgba(232, 184, 74, 0.15);
   color: var(--gold);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
 }
 
 /* Anillo que se vacía a lo largo del nivel, con el tiempo dentro */
+.ring-area {
+  flex: 1 1 0;
+  min-height: 190px;
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+
 .ring {
   position: relative;
-  width: min(80vw, 320px, 34dvh);
+  width: min(86cqw, 100cqh, 330px);
   aspect-ratio: 1;
-  margin: 4px auto 0;
+  container-type: inline-size;
 }
 
 .ring svg {
@@ -1103,7 +1063,8 @@ input {
 
 .timer-clock {
   font-family: var(--display);
-  font-size: min(18vw, 4.8rem, 9dvh);
+  /* Proporcional al anillo */
+  font-size: 24cqw;
   font-weight: 650;
   line-height: 1;
   color: var(--gold);
@@ -1117,9 +1078,18 @@ input {
   opacity: 0.5;
 }
 
+.ring-winner {
+  font-family: var(--display);
+  font-size: 9cqw;
+  font-weight: 600;
+  color: var(--text);
+}
+
 .ring-label {
+  max-width: 80%;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  text-align: center;
 }
 
 /* Ciegas actuales casi tan grandes como el tiempo; las siguientes, al lado */
@@ -1128,6 +1098,7 @@ input {
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
+  padding: 10px 14px;
 }
 
 .blinds-main,
@@ -1171,10 +1142,35 @@ input {
   gap: 8px 14px;
 }
 
-.timer-skip {
+/* Anterior · Pausar · Siguiente en una sola fila */
+.timer-controls {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 60px 1fr 60px;
+  align-items: center;
   gap: 10px;
+}
+
+.timer-controls .cta {
+  min-height: 60px;
+}
+
+.round-btn {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: var(--felt-dark);
+}
+
+.round-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.round-btn:disabled {
+  opacity: 0.35;
 }
 
 .ghost-btn {
@@ -1200,9 +1196,20 @@ input {
   opacity: 0.35;
 }
 
+.ghost-btn.small {
+  min-height: 44px;
+  font-size: 0.9rem;
+}
+
+.ghost-btn.danger {
+  color: var(--danger);
+  border-color: rgba(255, 138, 122, 0.4);
+}
+
 .timer-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* La primera casilla lleva el contador de eliminados: más ancha */
+  grid-template-columns: 1.45fr 1fr 1fr;
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
   background: var(--felt-dark);
@@ -1212,8 +1219,10 @@ input {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  padding: 10px 4px;
+  min-width: 0;
+  padding: 8px 4px;
 }
 
 .timer-stats > div + div {
@@ -1224,41 +1233,109 @@ input {
   font-family: var(--display);
   font-size: 1.3rem;
   font-weight: 600;
+  line-height: 1.15;
+}
+
+/* Quedan: − 6/8 + dentro de la franja */
+.mini-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mini-stepper button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: var(--card);
+}
+
+.mini-stepper button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mini-stepper button:disabled {
+  opacity: 0.35;
+}
+
+.mini-stepper small {
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .timer-actions {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.timer-actions .ghost-btn {
+  gap: 6px;
+  padding-inline: 6px;
+}
+
+.ghost-btn.accent {
+  color: var(--gold);
+  border-color: rgba(232, 184, 74, 0.45);
 }
 
 /* Premios del bote */
+.prizes {
+  padding: 10px 12px;
+}
+
+.prizes .card-head {
+  margin-bottom: 8px;
+}
+
+.prizes .card-head strong {
+  color: var(--gold);
+}
+
 .prizes ol {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 6px;
 }
 
 .prizes li {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 4px;
+  padding: 6px 4px;
+  border: 1px solid transparent;
   border-radius: 10px;
   background: var(--felt-dark);
   font-variant-numeric: tabular-nums;
+}
+
+.prizes li .setup-label {
+  font-size: 0.75rem;
 }
 
 .prizes li.first {
   background: rgba(232, 184, 74, 0.14);
 }
 
+.prizes li.next {
+  border-color: var(--gold);
+}
+
+.prizes li.done {
+  opacity: 0.4;
+}
+
 .prizes li strong {
   font-family: var(--display);
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   font-weight: 600;
   line-height: 1.1;
 }
@@ -1269,10 +1346,10 @@ input {
 
 .prizes li small {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
-.prizes .card-head strong {
+.prizes li.next small {
   color: var(--gold);
 }
 
@@ -1310,4 +1387,183 @@ input {
 .tabs button.active {
   color: var(--gold);
   font-weight: 700;
+}
+
+.pill:disabled {
+  opacity: 0.35;
+}
+
+/* Hoja inferior "Mi stack" (dialog nativo: fondo, Escape y foco gratis) */
+.sheet {
+  position: fixed;
+  inset: auto 0 0;
+  width: 100%;
+  max-width: 520px;
+  max-height: 92dvh;
+  margin: 0 auto;
+  padding: 0;
+  border: none;
+  border-radius: 22px 22px 0 0;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+  overscroll-behavior: contain;
+}
+
+.sheet[open] {
+  animation: sheet-in 0.22s ease-out;
+}
+
+.sheet::backdrop {
+  background: rgba(3, 15, 11, 0.6);
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet[open] {
+    animation: none;
+  }
+}
+
+.sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet-head h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.sheet-head .icon-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+}
+
+.stack-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.stack-total strong {
+  font-family: var(--display);
+  font-size: 3rem;
+  font-weight: 650;
+  line-height: 1.05;
+  color: var(--gold);
+}
+
+.stack-total span {
+  color: var(--muted);
+}
+
+.sheet .note {
+  margin: 0;
+}
+
+.count-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.count-rows li {
+  display: grid;
+  grid-template-columns: 56px 1fr 4.5ch;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--card-border);
+  font-variant-numeric: tabular-nums;
+}
+
+.count-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.count-chip small {
+  color: var(--gold);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.count-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.count-stepper button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: var(--felt-dark);
+}
+
+.count-stepper button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.count-stepper button:disabled {
+  opacity: 0.35;
+}
+
+.count-stepper input {
+  width: 64px;
+  padding: 8px 4px;
+  text-align: center;
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.count-stepper input::-webkit-inner-spin-button,
+.count-stepper input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.count-sub {
+  text-align: right;
+  color: var(--muted);
+}
+
+.sheet .link {
+  align-self: center;
+}
+
+.sheet .link:disabled {
+  opacity: 0.4;
 }

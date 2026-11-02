@@ -2,7 +2,18 @@ import { useEffect, useRef, useState } from 'react'
 import { levelChangeAlert, oneMinuteAlert, unlockAudio, useWakeLock } from './alerts'
 import type { GamePlan } from './plan'
 import { useGameStore } from './storage'
-import { goTo, isRunning, newGame, pause, play, remainingMs, tick, type Game } from './timer'
+import {
+  goTo,
+  isRunning,
+  newGame,
+  pause,
+  play,
+  playersLeft,
+  remainingMs,
+  setPlayersLeft,
+  tick,
+  type Game,
+} from './timer'
 
 const ONE_MINUTE = 60_000
 
@@ -64,6 +75,12 @@ export function useGameClock() {
     next: () => update((g, t) => goTo(g, g.index + 1, t)),
     prev: () => update((g, t) => goTo(g, g.index - 1, t)),
     restartLevel: () => update((g, t) => goTo(g, g.index, t)),
+    // Con el último eliminado hay ganador: el reloj se para solo
+    setPlayersLeft: (left: number) =>
+      update((g, t) => {
+        const next = setPlayersLeft(g, left)
+        return playersLeft(next) === 1 ? pause(next, t) : next
+      }),
     end: () => setStore({ game: null }),
   }
 }

@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import type { BlindLevel } from './blinds'
-import { elapsedMs, formatClock, goTo, isRunning, newGame, pause, play, remainingMs, tick } from './timer'
+import {
+  elapsedMs,
+  formatClock,
+  goTo,
+  isRunning,
+  newGame,
+  pause,
+  play,
+  playersLeft,
+  remainingMs,
+  setPlayersLeft,
+  tick,
+} from './timer'
 
 const MIN = 60_000
 const levels: BlindLevel[] = [5, 10, 15].map((sb, i) => ({
@@ -67,5 +79,15 @@ describe('timer', () => {
     expect(formatClock(65_500)).toBe('1:06')
     expect(formatClock(0)).toBe('0:00')
     expect(formatClock(85 * MIN)).toBe('1:25:00')
+  })
+})
+
+describe('jugadores que quedan', () => {
+  it('empieza con todos y no baja de 1 ni sube de los que empezaron', () => {
+    const game = { ...newGame([], [], 20), players: 8 }
+    expect(playersLeft(game)).toBe(8)
+    expect(playersLeft(setPlayersLeft(game, 5))).toBe(5)
+    expect(playersLeft(setPlayersLeft(game, 0))).toBe(1)
+    expect(playersLeft(setPlayersLeft(game, 12))).toBe(8)
   })
 })

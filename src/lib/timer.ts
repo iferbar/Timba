@@ -19,6 +19,8 @@ export interface Game {
   /** Jugadores y stack con los que empezó (opcionales: partidas guardadas antes no los tienen) */
   players?: number
   stack?: number
+  /** Jugadores que siguen vivos; sin apuntar eliminaciones, todos */
+  left?: number
 }
 
 export function newGame(levels: BlindLevel[], chips: ChipColor[], levelMinutes: number): Game {
@@ -67,6 +69,16 @@ export function goTo(game: Game, index: number, now: number): Game {
     endsAt: running ? now + game.levelMs : null,
     remaining: game.levelMs,
   }
+}
+
+export function playersLeft(game: Game): number | undefined {
+  return game.left ?? game.players
+}
+
+/** Apunta una eliminación (o la deshace): entre 1 y los jugadores que empezaron */
+export function setPlayersLeft(game: Game, left: number): Game {
+  if (!game.players) return game
+  return { ...game, left: Math.min(game.players, Math.max(1, left)) }
 }
 
 export function elapsedMs(game: Game, now: number): number {

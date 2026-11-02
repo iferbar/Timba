@@ -17,6 +17,9 @@ import { ChevronIcon, MinusIcon, PencilIcon, PlusIcon, UsersIcon } from './Icons
 import { SetEditor } from './SetEditor'
 
 // Para un stack a mano está el lápiz
+/** Por debajo de esto la partida va demasiado rápida (ver CLAUDE.md: 30–50 BB) */
+const MIN_BB = 30
+
 const MODES: { mode: Exclude<StackMode, 'custom'>; label: string }[] = [
   { mode: 'corto', label: `Corto · ${STACK_BB.corto}` },
   { mode: 'normal', label: `Normal · ${STACK_BB.normal}` },
@@ -49,6 +52,16 @@ export function ChipCalculator() {
   const target = targetStackFor(set, config.stackMode, config.customStack)
   const result = distribute(set, config.players, target)
   const setPlayers = (players: number) => setConfig((c) => ({ ...c, players: clampPlayers(players) }))
+  // Con muchos jugadores el set no da para más: los modos que repiten el
+  // stack del anterior no cambiarían nada, así que se desactivan
+  const modeStacks = MODES.map(({ mode }) => {
+    const r = distribute(set, config.players, targetStackFor(set, mode, config.customStack))
+    return r.ok ? r.distribution.stack : null
+  })
+  const maxed = modeStacks.map((stack, i) => i > 0 && stack !== null && stack === modeStacks[i - 1])
+  const maxStack = Math.max(...modeStacks.map((s) => s ?? 0))
+  const maxBigBlinds =
+    result.ok && maxed.some(Boolean) ? Math.floor(maxStack / result.distribution.bigBlind) : null
   // El lápiz pasa a "Otro" partiendo del stack que sale ahora
   const editStack = () =>
     setConfig((c) => ({ ...c, stackMode: 'custom', customStack: result.ok ? result.distribution.stack : target }))
@@ -143,17 +156,21 @@ export function ChipCalculator() {
           </p>
         )}
         <div className="pills even">
-          {MODES.map(({ mode, label }) => (
+          {MODES.map(({ mode, label }, i) => (
             <button
               key={mode}
               className={`pill ${config.stackMode === mode ? 'active' : ''}`}
               onClick={() => setConfig((c) => ({ ...c, stackMode: mode }))}
+              disabled={maxed[i] && config.stackMode !== mode}
             >
               {label}
             </button>
           ))}
         </div>
-        <p className="muted">En ciegas grandes. Recomendado 30–50 para 2–3 h.</p>
+        <p className="muted">
+          En ciegas grandes. Recomendado 30–50 para 2–3 h.
+          {maxBigBlinds !== null && ` Con ${config.players} jugadores este set da como mucho ${maxBigBlinds}.`}
+        </p>
       </section>
 
       {result.ok ? (
@@ -166,7 +183,6 @@ export function ChipCalculator() {
 }
 
 function Result({ distribution: d, players }: { distribution: Distribution; players: number }) {
-  const off = Math.abs(d.stack - d.target) / d.target
   return (
     <>
       <section className="card">
@@ -184,10 +200,11 @@ function Result({ distribution: d, players }: { distribution: Distribution; play
         </ul>
         {/* El stack ya está en grande arriba */}
         <p className="muted center">{d.chipsPerPlayer} fichas por jugador</p>
-        {off > 0.1 && (
+        {/* Solo avisa si el stack queda corto de verdad, no por no llegar al objetivo exacto */}
+        {d.bigBlinds < MIN_BB && (
           <p className="note">
-            Con {players} jugadores este set no llega a {formatNumber(d.target)} con un reparto escalonado. Para
-            más stack, juntad otro set.
+            Con {players} jugadores salen {d.bigBlinds} ciegas grandes: la partida irá rápida. Para más stack, juntad
+            otro set.
           </p>
         )}
       </section>
