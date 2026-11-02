@@ -1732,8 +1732,67 @@ input {
   font-weight: 600;
 }
 
-.switch-row + .switch-row {
+.switches > * + * {
   border-top: 1px solid var(--card-border);
+}
+
+.switch-row:disabled {
+  opacity: 0.45;
+}
+
+/* "Probar la voz" va pegado a su interruptor, sin raya entre medias */
+.sheet .link.voice-test {
+  align-self: flex-start;
+  margin: -6px 0 0;
+  padding: 0 14px 12px;
+  border-top: none;
+  font-size: 0.9rem;
+}
+
+.sound-custom summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--felt-dark);
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+
+.sound-custom summary::-webkit-details-marker {
+  display: none;
+}
+
+.sound-custom summary > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.sound-custom summary small {
+  color: var(--gold);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.sound-custom summary svg {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  transform: rotate(90deg);
+  transition: transform 0.15s ease-out;
+}
+
+.sound-custom[open] summary svg {
+  transform: rotate(-90deg);
+}
+
+.sound-custom[open] summary {
+  margin-bottom: 8px;
 }
 
 .switch-row > span:first-child {

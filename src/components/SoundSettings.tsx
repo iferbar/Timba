@@ -3,9 +3,10 @@ import { unlockAudio } from '../lib/alerts'
 import { ALERT_EVENTS, levelSpeech, type AlertEvent } from '../lib/announcer'
 import { playSound, removeCustomSound, setCustomSound, speak, useCustomSounds } from '../lib/sounds'
 import { useAlertConfig } from '../lib/storage'
-import { CloseIcon, FileIcon, MicIcon, PlayIcon, StopIcon, TrashIcon } from './Icons'
+import { ChevronIcon, CloseIcon, FileIcon, MicIcon, PlayIcon, StopIcon, TrashIcon } from './Icons'
 
-const WARN_OPTIONS = [0, 1, 2]
+/** Aviso previo: con niveles de 20 min basta con un minuto */
+const WARN_MINUTES = 1
 const MAX_RECORD_SECONDS = 8
 const MAX_FILE_BYTES = 2 * 1024 * 1024
 
@@ -113,44 +114,45 @@ export function SoundSettings({ onClose }: { onClose: () => void }) {
             checked={!config.muted}
             onChange={(on) => setConfig((c) => ({ ...c, muted: !on }))}
           />
+          {/* Sin sonido tampoco hay voz: se ve apagada */}
           <Switch
             label="Voz"
             hint="Lee las ciegas al subir"
-            checked={config.voice}
+            checked={config.voice && !config.muted}
+            disabled={config.muted}
             onChange={(voice) => setConfig((c) => ({ ...c, voice }))}
           />
+          <button
+            className="link voice-test"
+            disabled={config.muted || !config.voice}
+            onClick={() =>
+              speak(levelSpeech({ level: 5, smallBlind: 25, bigBlind: 50, startMinute: 0, colorUp: [], overtime: false }))
+            }
+          >
+            Probar la voz
+          </button>
           <Switch
             label="Vibración"
             checked={config.vibration}
             onChange={(vibration) => setConfig((c) => ({ ...c, vibration }))}
           />
-        </div>
-        <button
-          className="link"
-          onClick={() =>
-            speak(levelSpeech({ level: 5, smallBlind: 25, bigBlind: 50, startMinute: 0, colorUp: [], overtime: false }))
-          }
-        >
-          Probar la voz
-        </button>
-
-        <div>
-          <h3 className="sheet-label">Aviso antes de subir</h3>
-          <div className="pills even">
-            {WARN_OPTIONS.map((m) => (
-              <button
-                key={m}
-                className={`pill ${config.warnMinutes === m ? 'active' : ''}`}
-                onClick={() => setConfig((c) => ({ ...c, warnMinutes: m }))}
-              >
-                {m === 0 ? 'Sin aviso' : `${m} min`}
-              </button>
-            ))}
-          </div>
+          <Switch
+            label={`Aviso ${WARN_MINUTES} min antes`}
+            hint="El cambio de nivel suena siempre"
+            checked={config.warnMinutes > 0}
+            onChange={(on) => setConfig((c) => ({ ...c, warnMinutes: on ? WARN_MINUTES : 0 }))}
+          />
         </div>
 
-        <div>
-          <h3 className="sheet-label">Sonidos</h3>
+        {/* Se toca una vez: queda plegado para que la hoja sea corta */}
+        <details className="sound-custom">
+          <summary>
+            <span>
+              Personalizar sonidos
+              {customs.size > 0 && <small>{customs.size === 1 ? '1 propio' : `${customs.size} propios`}</small>}
+            </span>
+            <ChevronIcon />
+          </summary>
           <ul className="sound-rows">
             {ALERT_EVENTS.map(({ event, label }) => {
               const own = customs.has(event)
@@ -166,13 +168,11 @@ export function SoundSettings({ onClose }: { onClose: () => void }) {
                   </button>
                   <span className="sound-name">
                     {label}
-                    <small className={isRecording ? 'recording' : ''}>
-                      {isRecording
-                        ? `Grabando… ${MAX_RECORD_SECONDS - recording.seconds} s`
-                        : own
-                          ? 'Sonido propio'
-                          : 'De casino'}
-                    </small>
+                    {isRecording ? (
+                      <small className="recording">Grabando… {MAX_RECORD_SECONDS - recording.seconds} s</small>
+                    ) : (
+                      own && <small>Sonido propio</small>
+                    )}
                   </span>
                   {isRecording ? (
                     <button className="sound-btn stop" onClick={stopRecording} aria-label="Parar la grabación">
@@ -215,7 +215,7 @@ export function SoundSettings({ onClose }: { onClose: () => void }) {
           <p className="muted">
             Graba hasta {MAX_RECORD_SECONDS} s o elige un audio del móvil. Tras el sonido, la voz dice las ciegas.
           </p>
-        </div>
+        </details>
 
         <input ref={fileInput} type="file" accept="audio/*" hidden onChange={onFile} />
       </div>
@@ -227,15 +227,23 @@ function Switch({
   label,
   hint,
   checked,
+  disabled = false,
   onChange,
 }: {
   label: string
   hint?: string
   checked: boolean
+  disabled?: boolean
   onChange: (checked: boolean) => void
 }) {
   return (
-    <button className="switch-row" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}>
+    <button
+      className="switch-row"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+    >
       <span>
         {label}
         {hint && <small>{hint}</small>}
