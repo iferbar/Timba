@@ -9,10 +9,16 @@ describe('roster', () => {
     expect(cleanName('x'.repeat(30))).toHaveLength(20)
   })
 
+  it('pone la inicial en mayúscula si está todo igual, y si no lo respeta', () => {
+    expect(cleanName('IVAN')).toBe('Ivan')
+    expect(cleanName('josé luis')).toBe('José Luis')
+    expect(cleanName('McGregor')).toBe('McGregor')
+  })
+
   it('añade en orden alfabético y marca para jugar', () => {
     const r = addName(addName(empty, 'marta'), 'Dani')
-    expect(r.names).toEqual(['Dani', 'marta'])
-    expect(r.playing).toEqual(['Dani', 'marta'])
+    expect(r.names).toEqual(['Dani', 'Marta'])
+    expect(r.playing).toEqual(['Dani', 'Marta'])
   })
 
   it('no repite un nombre que ya está (sin mirar mayúsculas ni tildes)', () => {
@@ -30,7 +36,7 @@ describe('roster', () => {
     const marked = togglePlaying(togglePlaying(r, 'Marta'), 'Ana')
     expect(marked.playing).toEqual(['Ana', 'Marta'])
     expect(togglePlaying(marked, 'Ana').playing).toEqual(['Marta'])
-    expect(removeName(marked, 'Marta')).toEqual({ names: ['Ana', 'Dani'], playing: ['Ana'] })
+    expect(removeName(marked, 'Marta')).toMatchObject({ names: ['Ana', 'Dani'], playing: ['Ana'] })
   })
 
   it('solo da nombres a la partida si cuadran con los jugadores', () => {

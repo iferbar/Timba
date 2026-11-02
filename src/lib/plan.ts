@@ -1,6 +1,7 @@
 import { blindStructure, type BlindLevel } from './blinds'
 import { distribute, sortedChips, targetStackFor, type ChipColor, type ChipSet } from './chips'
 import { gameNames } from './roster'
+import { drawMatches } from './seats'
 import { useBlindConfig, useChipConfig, useRoster } from './storage'
 
 export interface GamePlan {
@@ -8,8 +9,10 @@ export interface GamePlan {
   /** Fichas del set ordenadas de menor a mayor valor */
   chips: ChipColor[]
   players: number
-  /** Nombres de los que juegan, si están marcados todos */
+  /** Nombres de los que juegan, si están marcados todos; con sorteo, en el orden de la mesa */
   names?: string[]
+  /** Quién empieza con el botón, si se ha sorteado */
+  dealer?: string
   stack: number
   levelMinutes: number
   durationMinutes: number
@@ -27,13 +30,19 @@ export function useGamePlan(): GamePlan | null {
   const result = distribute(set, chipConfig.players, targetStackFor(set, chipConfig.stackMode, chipConfig.customStack))
   if (!result.ok) return null
 
+  const namesFor = () => {
+    const names = gameNames(roster, chipConfig.players)
+    if (!names) return {}
+    return drawMatches(roster.draw, names) ? { names: roster.draw.seats, dealer: roster.draw.dealer } : { names }
+  }
+
   const chips = sortedChips(set)
   const { stack } = result.distribution
   return {
     set,
     chips,
     players: chipConfig.players,
-    names: gameNames(roster, chipConfig.players),
+    ...namesFor(),
     stack,
     levelMinutes: blindConfig.levelMinutes,
     durationMinutes: blindConfig.durationMinutes,

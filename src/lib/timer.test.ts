@@ -14,6 +14,7 @@ import {
   tick,
   alivePlayers,
   eliminate,
+  moveButton,
   finishers,
   undoElimination,
 } from './timer'
@@ -127,5 +128,24 @@ describe('eliminaciones con nombre', () => {
     expect(g.out).toEqual(['Dani'])
     expect(playersLeft(g)).toBe(3)
     expect(undoElimination(named)).toBe(named)
+  })
+})
+
+describe('moveButton', () => {
+  it('pasa el botón al siguiente vivo y lo devuelve', () => {
+    const g = { ...newGame(levels, [], 20), players: 3, names: ['Ana', 'Dani', 'Iván'], buttonSeat: 0, out: ['Dani'] }
+    expect(moveButton(g, 1).buttonSeat).toBe(2)
+    expect(moveButton(g, -1).buttonSeat).toBe(2)
+    expect(moveButton(moveButton(g, 1), 1).buttonSeat).toBe(0)
+  })
+
+  it('una partida empezada sin botón lo saca de quién repartió primero', () => {
+    const g = { ...newGame(levels, [], 20), players: 3, names: ['Ana', 'Dani', 'Iván'], dealer: 'Dani' }
+    expect(moveButton(g, 1).buttonSeat).toBe(2)
+  })
+
+  it('sin sorteo no hay botón que mover', () => {
+    const g = { ...newGame(levels, [], 20), players: 2, names: ['Ana', 'Dani'] }
+    expect(moveButton(g, 1)).toBe(g)
   })
 })

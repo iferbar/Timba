@@ -3,13 +3,25 @@ import type { BlindLevel } from '../lib/blinds'
 import { formatNumber } from '../lib/format'
 import { useGamePlan } from '../lib/plan'
 import { BUY_IN, prizes } from '../lib/prizes'
-import { alivePlayers, elapsedMs, finishers, formatClock, isRunning, playersLeft, remainingMs } from '../lib/timer'
+import { handRoles } from '../lib/seats'
+import { alivePlayers, buttonSeatOf, elapsedMs, finishers, formatClock, isRunning, playersLeft, remainingMs } from '../lib/timer'
 import type { GameClock } from '../lib/useGameClock'
 import { formatHours, NoPlan } from './BlindStructure'
 import { Chip } from './Chip'
 import { KnockoutSheet } from './KnockoutSheet'
+import { SeatsCard } from './SeatsCard'
 import { StackCounter } from './StackCounter'
-import { ChipIcon, MinusIcon, NextIcon, PauseIcon, PlayIcon, PlusIcon, PrevIcon, RestartIcon, StopIcon } from './Icons'
+import {
+  ChipIcon,
+  MinusIcon,
+  NextIcon,
+  PauseIcon,
+  PlayIcon,
+  PlusIcon,
+  PrevIcon,
+  RestartIcon,
+  StopIcon,
+} from './Icons'
 
 interface Props {
   clock: GameClock
@@ -45,6 +57,7 @@ export function Timer({ clock, onGoToChips }: Props) {
           <PlayIcon />
           <span>Empezar partida</span>
         </button>
+        {plan.names && <SeatsCard chipColors={plan.chips.map((c) => c.color)} />}
         <Stats
           items={[
             [plan.players, 'Jugadores'],
@@ -76,6 +89,10 @@ export function Timer({ clock, onGoToChips }: Props) {
   const alive = alivePlayers(game)
   const places = finishers(game)
   const lastOut = game.out?.at(-1)
+  const chipColors = game.chips.map((c) => c.color)
+  // Con asientos sorteados: quién reparte y quién pone las ciegas en esta mano
+  const buttonSeat = buttonSeatOf(game)
+  const roles = game.names && buttonSeat !== undefined ? handRoles(game.names, game.out ?? [], buttonSeat) : null
 
   return (
     <div className="screen timer">
@@ -101,7 +118,33 @@ export function Timer({ clock, onGoToChips }: Props) {
         }
         level={level}
         next={next}
-      />
+      >
+        {roles && game.names && !winner && (
+          <div className="blinds-hand">
+            <span className="hand-roles">
+              <span className="table-puck small" aria-label="Botón">
+                D
+              </span>
+              {game.names[roles.button]}
+              {roles.small !== roles.button && (
+                <>
+                  <small>SB</small>
+                  {game.names[roles.small]}
+                </>
+              )}
+              <small>BB</small>
+              {game.names[roles.big]}
+            </span>
+            <button className="hand-btn back" onClick={clock.prevHand} aria-label="Devolver el botón a la mano anterior">
+              <PrevIcon />
+            </button>
+            <button className="hand-btn" onClick={clock.nextHand} aria-label="Pasar el botón a la mano siguiente">
+              Pasar
+              <NextIcon />
+            </button>
+          </div>
+        )}
+      </Blinds>
 
       {level.colorUp.length > 0 && (
         <div className="note">
@@ -196,6 +239,10 @@ export function Timer({ clock, onGoToChips }: Props) {
         <KnockoutSheet
           alive={alive}
           prize={prizeList[alive.length - 1] ?? 0}
+          seats={buttonSeat !== undefined ? game.names : undefined}
+          out={game.out}
+          buttonSeat={buttonSeat}
+          chipColors={chipColors}
           onPick={clock.eliminate}
           onClose={() => setKnocking(false)}
         />
@@ -251,8 +298,18 @@ function Ring({
   )
 }
 
-/** Ciegas del nivel en grande y las siguientes al lado, con el color-up que viene */
-function Blinds({ label, level, next }: { label: ReactNode; level: BlindLevel; next?: BlindLevel }) {
+/** Ciegas del nivel en grande y las siguientes al lado, con el color-up que viene (y debajo, quién las pone) */
+function Blinds({
+  label,
+  level,
+  next,
+  children,
+}: {
+  label: ReactNode
+  level: BlindLevel
+  next?: BlindLevel
+  children?: ReactNode
+}) {
   return (
     <section className="card blinds-now">
       <div className="blinds-main">
@@ -270,6 +327,7 @@ function Blinds({ label, level, next }: { label: ReactNode; level: BlindLevel; n
           {next.colorUp.length > 0 && <small>retirar {next.colorUp.join(', ')}</small>}
         </div>
       )}
+      {children}
     </section>
   )
 }

@@ -1,5 +1,6 @@
 import type { BlindLevel } from './blinds'
 import type { ChipColor } from './chips'
+import { moveButtonSeat } from './seats'
 
 /**
  * Estado de una partida en curso. El tiempo se guarda como marcas de reloj
@@ -25,6 +26,10 @@ export interface Game {
   names?: string[]
   /** Eliminados con nombre por orden de caída: el primero acabó el último */
   out?: string[]
+  /** Quién empezó con el botón (si se sortearon los asientos; names va en el orden de la mesa) */
+  dealer?: string
+  /** Asiento (índice en names) que lleva el botón en esta mano */
+  buttonSeat?: number
 }
 
 export function newGame(levels: BlindLevel[], chips: ChipColor[], levelMinutes: number): Game {
@@ -115,6 +120,23 @@ export function finishers(game: Game): Map<number, string> {
   const alive = alivePlayers(game)
   if (game.names && alive.length === 1) places.set(1, alive[0])
   return places
+}
+
+/**
+ * Asiento del botón en esta mano, o undefined si no se sortearon los asientos.
+ * Las partidas empezadas antes de llevar el botón lo sacan de quién repartió primero.
+ */
+export function buttonSeatOf(game: Game): number | undefined {
+  if (game.buttonSeat !== undefined) return game.buttonSeat
+  const seat = game.dealer ? (game.names?.indexOf(game.dealer) ?? -1) : -1
+  return seat >= 0 ? seat : undefined
+}
+
+/** Pasa el botón a la mano siguiente (step -1: lo devuelve si se tocó de más) */
+export function moveButton(game: Game, step: 1 | -1): Game {
+  const seat = buttonSeatOf(game)
+  if (!game.names || seat === undefined) return game
+  return { ...game, buttonSeat: moveButtonSeat(game.names, game.out ?? [], seat, step) }
 }
 
 export function elapsedMs(game: Game, now: number): number {

@@ -10,6 +10,7 @@ import {
   eliminate,
   goTo,
   isRunning,
+  moveButton,
   newGame,
   pause,
   play,
@@ -97,6 +98,8 @@ export function useGameClock() {
         players: plan.players,
         stack: plan.stack,
         names: plan.names,
+        dealer: plan.dealer,
+        buttonSeat: plan.names && plan.dealer ? plan.names.indexOf(plan.dealer) : undefined,
       }
       setStore({ game: play(game, t) })
     },
@@ -142,6 +145,8 @@ export function useGameClock() {
       })
     },
     undoElimination: () => update((g) => undoElimination(g)),
+    nextHand: () => update((g) => moveButton(g, 1)),
+    prevHand: () => update((g) => moveButton(g, -1)),
     end: () => setStore({ game: null }),
   }
 }

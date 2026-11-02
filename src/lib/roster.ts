@@ -1,22 +1,29 @@
+import type { SeatDraw } from './seats'
+
 /** Amigos habituales y quién juega hoy (vacío = partida sin nombres) */
 export interface Roster {
   names: string[]
   playing: string[]
+  /** Último sorteo de asientos; solo vale si son los mismos que juegan */
+  draw?: SeatDraw
 }
 
 export const MAX_NAME_LENGTH = 20
 
+/** Quita espacios de más y, si está todo en mayúsculas o en minúsculas, pone la inicial en mayúscula */
 export function cleanName(raw: string): string {
-  return raw.trim().replace(/\s+/g, ' ').slice(0, MAX_NAME_LENGTH)
+  const name = raw.trim().replace(/\s+/g, ' ').slice(0, MAX_NAME_LENGTH)
+  if (name !== name.toLocaleUpperCase('es') && name !== name.toLocaleLowerCase('es')) return name
+  return name.toLocaleLowerCase('es').replace(/(^|\s)\p{L}/gu, (m) => m.toLocaleUpperCase('es'))
 }
 
 const sameName = (a: string, b: string) => a.localeCompare(b, 'es', { sensitivity: 'base' }) === 0
 const sortNames = (names: string[]) => [...names].sort((a, b) => a.localeCompare(b, 'es'))
 
 /** Los que juegan siempre en el orden de la lista */
-function withPlaying(names: string[], playing: Iterable<string>): Roster {
+function withPlaying(roster: Roster, names: string[], playing: Iterable<string>): Roster {
   const set = new Set(playing)
-  return { names, playing: names.filter((n) => set.has(n)) }
+  return { ...roster, names, playing: names.filter((n) => set.has(n)) }
 }
 
 /** Añade un nombre (si ya estaba, no lo repite) y lo marca para jugar hoy */
@@ -25,11 +32,12 @@ export function addName(roster: Roster, raw: string): Roster {
   if (!name) return roster
   const existing = roster.names.find((n) => sameName(n, name))
   const names = existing ? roster.names : sortNames([...roster.names, name])
-  return withPlaying(names, [...roster.playing, existing ?? name])
+  return withPlaying(roster, names, [...roster.playing, existing ?? name])
 }
 
 export function removeName(roster: Roster, name: string): Roster {
   return withPlaying(
+    roster,
     roster.names.filter((n) => n !== name),
     roster.playing,
   )
@@ -39,7 +47,7 @@ export function togglePlaying(roster: Roster, name: string): Roster {
   const playing = roster.playing.includes(name)
     ? roster.playing.filter((n) => n !== name)
     : [...roster.playing, name]
-  return withPlaying(roster.names, playing)
+  return withPlaying(roster, roster.names, playing)
 }
 
 /** Nombres para la partida: solo si cuadran con el número de jugadores */

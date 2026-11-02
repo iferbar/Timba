@@ -167,6 +167,14 @@ export const CheckIcon = () => (
   </Icon>
 )
 
+export const ShuffleIcon = () => (
+  <Icon>
+    <path d="M3 7h3.5c2 0 3 1 4.5 3.5l2 3.5c1.5 2.5 2.5 3 4.5 3H21" />
+    <path d="M3 17h3.5c1.3 0 2.2-.5 3-1.5M14.5 8.5c.8-1 1.7-1.5 3-1.5H21" />
+    <path d="m18 4 3 3-3 3M18 14l3 3-3 3" />
+  </Icon>
+)
+
 export const TrashIcon = () => (
   <Icon>
     <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />

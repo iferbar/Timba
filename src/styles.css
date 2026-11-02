@@ -1133,10 +1133,73 @@ input {
 /* Ciegas actuales casi tan grandes como el tiempo; las siguientes, al lado */
 .blinds-now {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
   padding: 10px 14px;
+}
+
+/* Quién reparte y quién pone las ciegas en esta mano, y el botón para pasarlo */
+.blinds-hand {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: -2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--card-border);
+}
+
+/* Con nombres largos pasa a dos líneas antes que cortar a nadie */
+.hand-roles {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 5px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.hand-roles small {
+  margin-left: 4px;
+  color: var(--gold);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.hand-btn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 10px 0 14px;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  background: rgba(232, 184, 74, 0.12);
+  color: var(--gold);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.hand-btn.back {
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+  justify-content: center;
+  border-color: var(--card-border);
+  background: var(--felt-dark);
+  color: var(--muted);
+}
+
+.hand-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .blinds-main,
@@ -2069,4 +2132,241 @@ input {
 .knockout-grid button:active {
   border-color: var(--danger);
   color: var(--danger);
+}
+
+/* Asientos: mesa vista desde arriba con los nombres alrededor */
+.seats-card .ghost-btn {
+  width: 100%;
+}
+
+.seat-table {
+  position: relative;
+  aspect-ratio: 16 / 11;
+  margin: 2px 0 6px;
+}
+
+/* Borde de madera con el canto por debajo y sombra en el suelo: da el volumen */
+.table-rail {
+  position: absolute;
+  inset: 18% 13%;
+  padding: 3.2%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #8a5a2b 0%, #5c3a1a 55%, #3e2610 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 220, 160, 0.35),
+    0 9px 0 #2a190a,
+    0 22px 26px rgba(0, 0, 0, 0.55);
+}
+
+/* Tapete con la luz desde arriba y la línea dorada de apuestas */
+.table-felt {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 32%, #2f9061 0%, #1b6340 50%, #0f4029 100%);
+  box-shadow: inset 0 8px 18px rgba(0, 0, 0, 0.5);
+}
+
+.table-felt::before {
+  content: '';
+  position: absolute;
+  inset: 16% 13%;
+  border: 1.5px solid rgba(232, 184, 74, 0.3);
+  border-radius: 50%;
+}
+
+.table-felt svg {
+  width: 22%;
+  height: auto;
+  color: rgba(232, 184, 74, 0.16);
+}
+
+.table-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.table-center strong {
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.table-center span {
+  color: var(--gold);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Montón de fichas delante de cada jugador */
+.seat-stack {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.seat-stack i {
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.4),
+    0 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* Botón de repartidor: una ficha blanca que se desliza al pasarlo */
+.table-puck {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f4efe2;
+  color: #1a1408;
+  font-size: 0.7rem;
+  font-weight: 800;
+  box-shadow:
+    0 3px 0 #a99f88,
+    0 5px 8px rgba(0, 0, 0, 0.45);
+}
+
+.seat-table .table-puck {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  transition:
+    left 0.45s ease-in-out,
+    top 0.45s ease-in-out;
+  animation: seat-in 0.3s ease-out;
+}
+
+.table-puck.small {
+  width: 22px;
+  height: 15px;
+  font-size: 0.6rem;
+  box-shadow: 0 2px 0 #a99f88;
+}
+
+.seat-table ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.seat {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 34%;
+  transform: translate(-50%, -50%);
+}
+
+button.seat-name {
+  color: inherit;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  min-height: 40px;
+  padding-inline: 14px;
+  border-color: rgba(232, 184, 74, 0.45);
+}
+
+button.seat-name:active {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.seat-name {
+  max-width: 100%;
+  padding: 5px 11px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--felt-dark);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.seat:not(.hidden) .seat-name {
+  animation: seat-in 0.25s ease-out;
+}
+
+.seat.hidden .seat-name {
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.seat small,
+.seat-list small {
+  color: var(--gold);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.seat.out,
+.seat-list .out {
+  opacity: 0.4;
+}
+
+.seat.out .seat-name {
+  text-decoration: line-through;
+}
+
+@keyframes seat-in {
+  from {
+    transform: scale(0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seat:not(.hidden) .seat-name,
+  .seat-table .table-puck {
+    animation: none;
+    transition: none;
+  }
+}
+
+.seat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 12px;
+}
+
+.seat-list li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+
+
+.invisible {
+  visibility: hidden;
 }

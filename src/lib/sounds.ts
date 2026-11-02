@@ -140,6 +140,19 @@ const VIBRATION: Record<AlertEvent, number[]> = {
   winner: [200, 100, 200, 100, 800],
 }
 
+/** Sorteo de asientos: una ficha por cada asiento y campanas al salir el botón */
+export function playSeatSound() {
+  const c = audioContext()
+  if (c) clack(c, c.currentTime + 0.01, 0.6)
+}
+
+export function playDealerSound() {
+  const c = audioContext()
+  if (!c) return
+  bell(c, c.currentTime + 0.02, 784, 0.5)
+  bell(c, c.currentTime + 0.2, 1175, 0.8)
+}
+
 // --- Sonidos propios: grabados o elegidos del móvil ---
 
 const custom = new Map<AlertEvent, AudioBuffer>()
