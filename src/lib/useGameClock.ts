@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { levelChangeAlert, oneMinuteAlert, unlockAudio, useWakeLock } from './alerts'
+import { unlockAudio, useWakeLock } from './alerts'
+import { levelSpeech, playersEvent, playersSpeech, showBanner, warningSpeech } from './announcer'
 import type { GamePlan } from './plan'
-import { useGameStore } from './storage'
+import { prizes } from './prizes'
+import { announce } from './sounds'
+import { useAlertConfig, useGameStore } from './storage'
 import {
   goTo,
   isRunning,
@@ -17,12 +20,30 @@ import {
 
 const ONE_MINUTE = 60_000
 
+/** Avisa de que sube el nivel: sonido, voz y cartel en cualquier pestaña */
+function announceLevel(game: Game, config: ReturnType<typeof useAlertConfig>[0]) {
+  const level = game.levels[game.index]
+  const event = level.colorUp.length > 0 ? 'colorUp' : 'level'
+  announce(event, levelSpeech(level), config)
+  showBanner({
+    event,
+    title: 'Suben las ciegas',
+    big: `${level.smallBlind} / ${level.bigBlind}`,
+    subtitle: `Nivel ${level.level} de ${game.levels.length}`,
+    colorUp: level.colorUp.map((value) => ({
+      value,
+      color: game.chips.find((c) => c.value === value)?.color ?? '#888',
+    })),
+  })
+}
+
 /**
  * Reloj de la partida para toda la app: avanza niveles y avisa aunque se
  * esté mirando otra pestaña.
  */
 export function useGameClock() {
   const [{ game }, setStore] = useGameStore()
+  const [alerts] = useAlertConfig()
   const [now, setNow] = useState(() => Date.now())
   const running = game ? isRunning(game) : false
   const prevRemaining = useRef<number | null>(null)
@@ -40,14 +61,17 @@ export function useGameClock() {
     }
     const next = tick(game, now)
     if (next !== game) {
-      levelChangeAlert()
+      if (next.index !== game.index) announceLevel(next, alerts)
       setStore({ game: next })
     }
     const rem = remainingMs(next, now)
     const prev = prevRemaining.current
-    if (prev !== null && prev > ONE_MINUTE && rem <= ONE_MINUTE && rem > 0) oneMinuteAlert()
+    const warnMs = alerts.warnMinutes * ONE_MINUTE
+    if (warnMs > 0 && prev !== null && prev > warnMs && rem <= warnMs && rem > 0) {
+      announce('warning', warningSpeech(alerts.warnMinutes), alerts)
+    }
     prevRemaining.current = rem
-  }, [game, now, setStore])
+  }, [game, now, setStore, alerts])
 
   // Pantalla encendida durante toda la partida, también en pausa
   useWakeLock(game !== null)
@@ -75,12 +99,25 @@ export function useGameClock() {
     next: () => update((g, t) => goTo(g, g.index + 1, t)),
     prev: () => update((g, t) => goTo(g, g.index - 1, t)),
     restartLevel: () => update((g, t) => goTo(g, g.index, t)),
-    // Con el último eliminado hay ganador: el reloj se para solo
-    setPlayersLeft: (left: number) =>
+    // Burbuja, mano a mano y ganador se avisan; con ganador el reloj se para solo
+    setPlayersLeft: (left: number) => {
+      if (game?.players) {
+        const prev = playersLeft(game) ?? game.players
+        const list = prizes(game.players)
+        const event = playersEvent(prev, Math.max(1, left), list.length)
+        if (event) {
+          unlockAudio()
+          const speech = playersSpeech(event, list[0])
+          announce(event, speech, alerts)
+          if (event === 'bubble') showBanner({ event, title: 'Burbuja', subtitle: 'El siguiente en caer se va sin premio' })
+          if (event === 'headsUp') showBanner({ event, title: 'Mano a mano', subtitle: 'Quedan dos' })
+        }
+      }
       update((g, t) => {
         const next = setPlayersLeft(g, left)
         return playersLeft(next) === 1 ? pause(next, t) : next
-      }),
+      })
+    },
     end: () => setStore({ game: null }),
   }
 }

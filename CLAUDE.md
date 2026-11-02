@@ -52,6 +52,7 @@ Los sets son editables en la app (cada uno trae uno distinto y los valores puede
 ## Android (Capacitor 8)
 
 - Config en `capacitor.config.json` (no `.ts`: con TypeScript 7 la CLI de Capacitor no puede leer configs `.ts`).
+- Permiso de micrófono (`RECORD_AUDIO`) en `AndroidManifest.xml` para grabar sonidos propios. Los sonidos propios solo suenan con la app delante.
 - En nativo, `src/lib/alerts.ts` usa `@capacitor-community/keep-awake` (pantalla encendida) y `@capacitor/haptics` (vibración); en web, Wake Lock API y `navigator.vibrate`.
 - Icono y splash generados desde `assets/logo.png` con `npm run android:icons`.
 
@@ -65,7 +66,9 @@ Los sets son editables en la app (cada uno trae uno distinto y los valores puede
 - `src/lib/plan.ts`: `useGamePlan()`, la partida configurada (fichas + ciegas) que usan Ciegas y Reloj
 - `src/lib/timer.ts`: lógica pura del cronómetro, basada en marcas de reloj (`endsAt`) para sobrevivir a pantalla bloqueada y recargas; guarda también los jugadores que quedan (eliminaciones apuntadas en el Reloj). Tests en `timer.test.ts`
 - `src/lib/useGameClock.ts`: reloj de la partida a nivel de App (avanza niveles y avisa aunque se esté en otra pestaña)
-- `src/lib/alerts.ts`: sonidos (Web Audio), vibración y Wake Lock
+- `src/lib/alerts.ts`: contexto de Web Audio, vibración y Wake Lock
+- `src/lib/announcer.ts`: momentos que se avisan (subida, color-up, aviso previo, burbuja, mano a mano, ganador), textos de la voz y el cartel a pantalla completa (`AlertBanner.tsx`). Tests en `announcer.test.ts`
+- `src/lib/sounds.ts`: sonidos de casino generados con Web Audio, sonidos propios (grabados o elegidos, guardados en IndexedDB con `soundStore.ts`) y voz (`speechSynthesis` en web; `@capacitor-community/text-to-speech` en el APK, porque el WebView de Android no tiene voz). `announce()` aplica los ajustes de `useAlertConfig` (hoja `SoundSettings.tsx`, desde el altavoz de la cabecera)
 - `src/lib/storage.ts`: configuración y partida en curso guardadas en localStorage. Una sola copia en memoria por clave (`useSyncExternalStore`): un cambio en una pantalla (p. ej. jugadores en Inicio) se ve al momento en las demás
 - `src/components/`: pantallas (inicio, calculadora de fichas, editor de sets, estructura de ciegas, reloj) e `Icons.tsx` (iconos SVG propios: no usar emojis ni glifos Unicode como iconos)
 - `src/three/chipScene.ts`: escena 3D de Inicio con Three.js (ficha negra y dorada con pica, pila y fichas voladoras con los colores del set elegido). Se carga con `React.lazy` desde `ChipScene.tsx` para que Three.js solo se descargue en Inicio; se para con la app oculta y queda fija con "reducir movimiento"

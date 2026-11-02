@@ -16,6 +16,16 @@ export interface BlindConfig {
   durationMinutes: number
 }
 
+export interface AlertConfig {
+  /** Silencia sonidos y voz (la vibración va aparte) */
+  muted: boolean
+  /** Leer en voz alta las ciegas al subir de nivel */
+  voice: boolean
+  vibration: boolean
+  /** Aviso antes de que suba el nivel, en minutos (0 = sin aviso) */
+  warnMinutes: number
+}
+
 const DEFAULT_CHIP_CONFIG: ChipConfig = {
   sets: DEFAULT_SETS,
   selectedSetId: DEFAULT_SETS[0].id,
@@ -27,6 +37,13 @@ const DEFAULT_CHIP_CONFIG: ChipConfig = {
 const DEFAULT_BLIND_CONFIG: BlindConfig = {
   levelMinutes: 20,
   durationMinutes: 150,
+}
+
+const DEFAULT_ALERT_CONFIG: AlertConfig = {
+  muted: false,
+  voice: true,
+  vibration: true,
+  warnMinutes: 1,
 }
 
 function load<T extends object>(key: string, fallback: T): T {
@@ -83,6 +100,10 @@ export function useChipConfig() {
 
 export function useBlindConfig() {
   return usePersistentState('timba:blinds', DEFAULT_BLIND_CONFIG)
+}
+
+export function useAlertConfig() {
+  return usePersistentState('timba:alerts', DEFAULT_ALERT_CONFIG)
 }
 
 export function useGameStore() {

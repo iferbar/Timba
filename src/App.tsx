@@ -1,9 +1,13 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { AlertBanner } from './components/AlertBanner'
 import { BlindStructure } from './components/BlindStructure'
 import { ChipCalculator } from './components/ChipCalculator'
 import { Home, type Tab } from './components/Home'
-import { ChipIcon, ClockIcon, HomeIcon, LevelsIcon, SpadeIcon } from './components/Icons'
+import { ChipIcon, ClockIcon, HomeIcon, LevelsIcon, SpadeIcon, SpeakerIcon, SpeakerOffIcon } from './components/Icons'
+import { SoundSettings } from './components/SoundSettings'
 import { Timer } from './components/Timer'
+import { loadCustomSounds } from './lib/sounds'
+import { useAlertConfig } from './lib/storage'
 import { formatClock, isRunning, remainingMs } from './lib/timer'
 import { useGameClock } from './lib/useGameClock'
 
@@ -18,6 +22,13 @@ export function App() {
   const [tab, setTab] = useState<Tab>('inicio')
   const clock = useGameClock()
   const { game, now } = clock
+  const [alerts] = useAlertConfig()
+  const [soundOpen, setSoundOpen] = useState(false)
+
+  // Sonidos grabados o elegidos en otra sesión
+  useEffect(() => {
+    void loadCustomSounds()
+  }, [])
 
   const goToChips = () => setTab('fichas')
 
@@ -34,6 +45,15 @@ export function App() {
             <button className="mini-clock" onClick={() => setTab('reloj')}>
               {game.levels[game.index].smallBlind}/{game.levels[game.index].bigBlind}
               <strong className={isRunning(game) ? '' : 'paused'}>{formatClock(remainingMs(game, now))}</strong>
+            </button>
+          )}
+          {tab !== 'inicio' && (
+            <button
+              className={`icon-btn sound-toggle ${alerts.muted ? 'muted' : ''}`}
+              onClick={() => setSoundOpen(true)}
+              aria-label={alerts.muted ? 'Sonido (silenciado)' : 'Sonido'}
+            >
+              {alerts.muted ? <SpeakerOffIcon /> : <SpeakerIcon />}
             </button>
           )}
         </div>
@@ -64,6 +84,9 @@ export function App() {
           </button>
         ))}
       </nav>
+
+      <AlertBanner />
+      {soundOpen && <SoundSettings onClose={() => setSoundOpen(false)} />}
     </div>
   )
 }

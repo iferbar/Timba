@@ -132,3 +132,37 @@ export const CloseIcon = () => (
     <path d="M6 6l12 12M18 6 6 18" />
   </Icon>
 )
+
+export const SpeakerIcon = () => (
+  <Icon>
+    <path d="M4 9v6h4l5 4V5L8 9H4Z" />
+    <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
+  </Icon>
+)
+
+export const SpeakerOffIcon = () => (
+  <Icon>
+    <path d="M4 9v6h4l5 4V5L8 9H4Z" />
+    <path d="m17 9.5 5 5M22 9.5l-5 5" />
+  </Icon>
+)
+
+export const MicIcon = () => (
+  <Icon>
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
+  </Icon>
+)
+
+export const FileIcon = () => (
+  <Icon>
+    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" />
+    <path d="M14 3v5h5" />
+  </Icon>
+)
+
+export const TrashIcon = () => (
+  <Icon>
+    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+  </Icon>
+)
