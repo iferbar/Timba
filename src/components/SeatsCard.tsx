@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { unlockAudio } from '../lib/alerts'
+import { withQuip } from '../lib/quips'
 import { drawMatches, drawSeats, drawSpeech, firstHand, type SeatDraw } from '../lib/seats'
 import { playDealerSound, playSeatSound, speak } from '../lib/sounds'
 import { useAlertConfig, useRoster, type AlertConfig } from '../lib/storage'
@@ -13,7 +14,8 @@ const DEALER_MS = 500
 function announceDealer(draw: SeatDraw, alerts: AlertConfig) {
   if (alerts.muted) return
   playDealerSound()
-  if (alerts.voice) setTimeout(() => speak(drawSpeech(draw)), 700)
+  const speech = withQuip(drawSpeech(draw), 'draw', { reparte: firstHand(draw).button }, alerts.quips)
+  if (alerts.voice) setTimeout(() => speak(speech), 700)
 }
 
 /**

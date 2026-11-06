@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { unlockAudio, useWakeLock } from './alerts'
 import { knockout, levelSpeech, playersEvent, playersSpeech, showBanner, warningSpeech } from './announcer'
 import type { GamePlan } from './plan'
+import { withQuip, type QuipMoment } from './quips'
 import { announce } from './sounds'
 import { useAlertConfig, useGameStore } from './storage'
 import {
@@ -29,7 +30,7 @@ const ONE_MINUTE = 60_000
 function announceLevel(game: Game, config: ReturnType<typeof useAlertConfig>[0]) {
   const level = game.levels[game.index]
   const event = level.colorUp.length > 0 ? 'colorUp' : 'level'
-  announce(event, levelSpeech(level), config)
+  announce(event, withQuip(levelSpeech(level), event, {}, config.quips), config)
   showBanner({
     event,
     title: 'Suben las ciegas',
@@ -73,7 +74,7 @@ export function useGameClock() {
     const prev = prevRemaining.current
     const warnMs = alerts.warnMinutes * ONE_MINUTE
     if (warnMs > 0 && prev !== null && prev > warnMs && rem <= warnMs && rem > 0) {
-      announce('warning', warningSpeech(alerts.warnMinutes), alerts)
+      announce('warning', withQuip(warningSpeech(alerts.warnMinutes), 'warning', {}, alerts.quips), alerts)
     }
     prevRemaining.current = rem
   }, [game, now, setStore, alerts])
@@ -121,7 +122,7 @@ export function useGameClock() {
         const event = playersEvent(prev, Math.max(1, left), list.length)
         if (event) {
           unlockAudio()
-          const speech = playersSpeech(event, list[0])
+          const speech = withQuip(playersSpeech(event, list[0]), event as QuipMoment, {}, alerts.quips)
           announce(event, speech, alerts)
           if (event === 'bubble') showBanner({ event, title: 'Burbuja', subtitle: 'El siguiente en caer se va sin premio' })
           if (event === 'headsUp') showBanner({ event, title: 'Mano a mano', subtitle: 'Quedan dos' })
@@ -139,8 +140,14 @@ export function useGameClock() {
       const alive = before.filter((n) => n !== name)
       if (alive.length === 0 || alive.length === before.length) return
       unlockAudio()
-      const { event, speech, banner } = knockout(name, before.length, alive, gamePrizes(game), gameBuyIn(game))
-      announce(event, speech, alerts)
+      const list = gamePrizes(game)
+      const { event, speech, banner } = knockout(name, before.length, alive, list, gameBuyIn(game))
+      // El remate va del momento (ganador, mano a mano, burbuja) o, si no, de cómo se va el eliminado
+      const prize = list[before.length - 1] ?? 0
+      const moment: QuipMoment =
+        event !== 'out' ? event : prize === 0 ? 'outUnpaid' : prize === gameBuyIn(game) ? 'outRefund' : 'outPaid'
+      const vars = { nombre: name, ganador: alive[0], jugador1: alive[0], jugador2: alive[1], euros: String(prize) }
+      announce(event, withQuip(speech, moment, vars, alerts.quips), alerts)
       showBanner(banner)
       update((g, t) => {
         const next = eliminate(g, name)

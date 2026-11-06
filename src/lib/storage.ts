@@ -24,6 +24,8 @@ export interface AlertConfig {
   muted: boolean
   /** Leer en voz alta las ciegas al subir de nivel */
   voice: boolean
+  /** Remate gracioso tras cada frase de la voz (ver quips.ts) */
+  quips: boolean
   vibration: boolean
   /** Aviso antes de que suba el nivel, en minutos (0 = sin aviso) */
   warnMinutes: number
@@ -47,6 +49,7 @@ const DEFAULT_BLIND_CONFIG: BlindConfig = {
 const DEFAULT_ALERT_CONFIG: AlertConfig = {
   muted: false,
   voice: true,
+  quips: true,
   vibration: true,
   warnMinutes: 1,
   sounds: {},

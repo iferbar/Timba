@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { unlockAudio } from '../lib/alerts'
 import { ALERT_EVENTS, levelSpeech, type AlertEvent } from '../lib/announcer'
+import { withQuip } from '../lib/quips'
 import { CUSTOM, DEFAULT_SOUND, NONE } from '../lib/soundChoice'
 import {
   playSoundId,
@@ -152,11 +153,25 @@ export function SoundSettings({ onClose }: { onClose: () => void }) {
             className="link voice-test"
             disabled={config.muted || !config.voice}
             onClick={() =>
-              speak(levelSpeech({ level: 5, smallBlind: 25, bigBlind: 50, startMinute: 0, colorUp: [], overtime: false }))
+              speak(
+                withQuip(
+                  levelSpeech({ level: 5, smallBlind: 25, bigBlind: 50, startMinute: 0, colorUp: [], overtime: false }),
+                  'level',
+                  {},
+                  config.quips,
+                ),
+              )
             }
           >
             Probar la voz
           </button>
+          <Switch
+            label="Frases con gracia"
+            hint="Un remate distinto tras cada aviso"
+            checked={config.quips && config.voice && !config.muted}
+            disabled={config.muted || !config.voice}
+            onChange={(quips) => setConfig((c) => ({ ...c, quips }))}
+          />
           <Switch
             label="Vibración"
             checked={config.vibration}

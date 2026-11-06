@@ -83,6 +83,77 @@ Cuando el siguiente en caer ya no cobra.
 
 ---
 
+## 9. Remates graciosos
+
+Tras la frase de cada momento, la voz añade **uno de estos al azar** (nunca el mismo dos
+veces seguidas). Se apagan en Sonido → "Frases con gracia". Están en `src/lib/quips.ts`.
+
+Añade, quita o cambia los que quieras (uno por línea, con `-`). Llaves que valen:
+`{nombre}` (el que cae), `{euros}` (lo que se lleva), `{ganador}`, `{jugador1}` y
+`{jugador2}` (mano a mano), `{reparte}` (sorteo). Un remate con nombre solo sale si la
+partida lleva nombres.
+
+### Suben las ciegas
+- Se acabó lo barato.
+- Las ciegas suben, como el precio de la luz.
+- Quien no apueste ahora, que no llore luego.
+- Ojo, que esto ya muerde.
+- Hora de dejar de mirar el móvil.
+- Las ciegas no esperan a nadie.
+
+### Color-up
+- Fuera calderilla.
+- Las fichas pequeñas se jubilan.
+- Cambio de moneda: esto ya es otra liga.
+
+### Aviso antes de subir
+- Último minuto para robar ciegas baratas.
+- Aprovechad, que se acaba la ganga.
+- Un minuto. Tiempo de sobra para un farol.
+
+### Eliminado sin premio
+- {nombre}, la mesa te echará de menos. Bueno, tus fichas sí.
+- Otro que se va a ver la tele.
+- {nombre}, siempre nos quedará la próxima.
+- Nadie dijo que fuera fácil, {nombre}.
+- {nombre} ha donado sus fichas a la causa.
+- Ese all-in parecía buena idea.
+
+### Eliminado que recupera el buy-in
+- Al menos no pierdes dinero, {nombre}.
+- Ni ganas ni pierdes: empate técnico con la vida.
+- {nombre} se va como vino, con sus {euros} euros.
+
+### Eliminado con premio
+- {nombre} se va con la cartera más gorda.
+- Buena partida, {nombre}. Hoy invitas tú.
+- Con premio duele menos, ¿eh, {nombre}?
+
+### Burbuja
+- Aquí ya nadie quiere arriesgar.
+- Se acabaron los valientes.
+- Que nadie respire fuerte.
+
+### Mano a mano
+- Los demás, a por bebida.
+- Uno contra uno, como en las películas.
+- Solo puede quedar uno.
+- {jugador1} contra {jugador2}. Que empiece el espectáculo.
+
+### Ganador
+- {ganador}, hoy pagas tú las cervezas.
+- {ganador} manda en esta mesa.
+- Aplausos para {ganador}. Los demás, a llorar al parking.
+- Que alguien le haga una foto a {ganador}.
+- Ya hay campeón. Los demás, a fregar los vasos.
+
+### Sorteo de asientos
+- Que la suerte os acompañe.
+- Barajad bien, que os conozco.
+- Sin trampas, que os estoy viendo.
+
+---
+
 ## Cómo cambiar la voz
 
 ### En el móvil (APK), sin tocar la app
